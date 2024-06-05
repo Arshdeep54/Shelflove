@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shelflove</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
+    <link type="text/css" href="../static/css/style.css" rel="stylesheet" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+  </head>
+  <body>
+    <%- include('./components/navbar.ejs') %>
+    <div class="mx-5 my-5">
+      <h1 class="text m-1 font-bold"><%= book.name %></h1>
+      <p class="text m-1 font-bold">By: <%= book.author %></p>
+
+      <% if (isLoggedIn) { %>
+      <form action="/api/user/issue/" method="post"  >
+        <input type="hidden" name="bookid" value="<%= book.id %>" />
+        <input type="hidden" name="user_id" value="<%= user.id %>" />
+        <button type="submit" class="btn btn-secondary">Issue Book</button>
+      </form>
+      <% } else { %>
+      <p>Please log in to issue a book.</p>
+      <% } %>
+      <div class="flex flex-col text-lg m-5 gap-5">
+        <p><span class="text-primary">Description:</span> <%= book.description %></p>
+        <p><span class="text-primary" >Publication Date:</span> <%= book.publication_date %></p>
+        <p><span class="text-primary">Rating: </span><%= book.rating %></p>
+        <p><span class="text-primary">Quantity:</span> <%= book.quantity %></p>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shelflove</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
+    <link type="text/css" href="../static/css/style.css" rel="stylesheet" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+  </head>
+  <body>
+    <%- include('./components/navbar.ejs') %>
+
+    <h1>All Available Books</h1>
+    <% if (books) { %>
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Author</th>
+          <th>Rating</th>
+          <th>quantity</th>
+          <th>description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const book of books) { %>
+        <tr>
+          <td><a href="/books/<%= book.id %>"><%= book.name %></a></td>
+          <td><%= book.author %></td>
+          <td><%= book.rating %></td>
+          <td><%= book.quantity %></td>
+          <td><%= book.description %></td>
+        </tr>
+        <% } %>
+      </tbody>
+    </table>
+    <% } else { %>
+    <p>No books found.</p>
+    <% } %>
+  </body>
+</html>

@@ -19,21 +19,83 @@
       <h1 class="text m-1 font-bold"><%= book.name %></h1>
       <p class="text m-1 font-bold">By: <%= book.author %></p>
 
-      <% if (isLoggedIn) { %>
-      <form action="/api/user/issue/" method="post"  >
-        <input type="hidden" name="bookid" value="<%= book.id %>" />
-        <input type="hidden" name="user_id" value="<%= user.id %>" />
-        <button type="submit" class="btn btn-secondary">Issue Book</button>
+      <% if (isLoggedIn) { if(issuedByuser){ %>
+      <button type="submit" class="btn btn-secondary" disabled>Issued</button>
+      <form action="/api/user/return/" method="post" id="requestForm">
+        <input type="hidden" id="bookid" name="bookid" value="<%= book.id %>" />
+        <input type="hidden" id="user_id" name="user_id" value="<%= userId %>" />
+        <button type="submit" class="btn btn-secondary" disabled="<%=returnRequest%>">Return Request</button>
       </form>
       <% } else { %>
+      <form action="/api/user/issue/" method="post" id="issueForm">
+        <input type="hidden" id="bookid" name="bookid" value="<%= book.id %>" />
+        <input type="hidden" id="user_id" name="user_id" value="<%= userId %>" />
+        <button type="submit" class="btn btn-secondary">Issue Book</button>
+      </form>
+      <% } } else { %>
       <p>Please log in to issue a book.</p>
       <% } %>
       <div class="flex flex-col text-lg m-5 gap-5">
-        <p><span class="text-primary">Description:</span> <%= book.description %></p>
-        <p><span class="text-primary" >Publication Date:</span> <%= book.publication_date %></p>
+        <p>
+          <span class="text-primary">Description:</span> <%= book.description %>
+        </p>
+        <p>
+          <span class="text-primary">Publication Date:</span> <%=
+          book.publication_date %>
+        </p>
         <p><span class="text-primary">Rating: </span><%= book.rating %></p>
         <p><span class="text-primary">Quantity:</span> <%= book.quantity %></p>
       </div>
     </div>
+    <script>
+      const issueForm = document.getElementById("issueForm");
+      issueForm.addEventListener("submit", (event) => {
+        event.preventDefault(); // Prevent default form submission
+        const data = {
+          user_id: issueForm.elements.user_id.value,
+          bookid: issueForm.elements.bookid.value,
+        };
+        console.log(data);
+
+        const jsonData = JSON.stringify(data); // Convert to JSON string
+
+        fetch("/api/user/issue", {
+          method: "POST",
+          body: jsonData,
+          headers: { "Content-Type": "application/json" },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      });
+      const requestForm = document.getElementById("requestForm");
+      requestForm.addEventListener("submit", (event) => {
+        event.preventDefault(); // Prevent default form submission
+        const data = {
+          user_id: requestForm.elements.user_id.value,
+          bookid: requestForm.elements.bookid.value,
+        };
+        console.log(data);
+
+        const jsonData = JSON.stringify(data); // Convert to JSON string
+
+        fetch("/api/user/request", {
+          method: "POST",
+          body: jsonData,
+          headers: { "Content-Type": "application/json" },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      });
+    </script>
   </body>
 </html>

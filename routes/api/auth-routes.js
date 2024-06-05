@@ -24,9 +24,13 @@ router.post("/signup", async (req, res) => {
       }
 
       const userID = result.insertID;
-      const token = jwt.sign({ id: userID }, process.env.JWT_SECRET, {
-        expiresIn: 86400,
-      });
+      const token = jwt.sign(
+        { id: userID, isAdmin: false },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: 86400,
+        }
+      );
       res.cookie("jwtToken", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -49,28 +53,32 @@ router.post("/login", async (req, res) => {
     const query = `SELECT * FROM user WHERE username = ?`;
     const values = [username];
 
-    const [rows] = db.query(query, values);
-
-    if (!rows.length) {
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-
-    const user = rows[0]; 
-
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-    const userID = result.insertID;
-    const token = jwt.sign({ id: userID }, process.env.JWT_SECRET, {
-      expiresIn: 86400,
+    db.query(query, values, async (error, result) => {
+      if (!result) {
+        return res
+          .status(401)
+          .json({ message: "Invalid username or password" });
+      }
+      const user = result[0];
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res
+          .status(401)
+          .json({ message: "Invalid username or password" });
+      }
+      const token = jwt.sign(
+        { id: user.id, isAdmin: user.isAdmin },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: 86400,
+        }
+      );
+      res.cookie("jwtToken", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      });
+      res.redirect("/");
     });
-    res.cookie("jwtToken", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-    });
-    res.redirect("/");
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error logging in" });

@@ -1,11 +1,10 @@
 const db = require("../../dbconfig");
-
+const moment = require("moment");
 const router = require("express").Router();
 
 const { isBookAvailable } = require("../../utils/index");
 
 router.post("/issue/", async (req, res) => {
-  console.log(req.body);
   const { user_id, bookid } = req.body;
 
   if (!user_id || !bookid) {
@@ -19,8 +18,17 @@ router.post("/issue/", async (req, res) => {
       return res.status(400).json({ message: "Book is not available" });
     }
 
-    const today = new Date();
-    const returnDate = new Date(today.setDate(today.getDate() + 14)); // Add 14 days
+    const existingIssue = await db.query(
+      `SELECT * FROM issue WHERE user_id = ? AND isReturned = FALSE`,
+      [user_id]
+    );
+
+    if (existingIssue.length > 0) {
+      return res.status(400).json({ message: "User has an outstanding loan" });
+    }
+
+    const today = moment().format("YYYY-MM-DD");
+    const returnDate = moment(today).add(14, "days").format("YYYY-MM-DD");
 
     const query = `
         INSERT INTO issue (user_id, bookid, issue_date, return_date)
@@ -52,7 +60,7 @@ router.post("/return/", async (req, res) => {
   try {
     const query = `
         UPDATE issue
-        SET isReturned = true
+        SET returnRequested = true
         WHERE user_id = ? AND bookid = ?
       `;
     const values = [user_id, bookid];
@@ -65,7 +73,7 @@ router.post("/return/", async (req, res) => {
         .json({ message: "Book not found or already returned" });
     }
 
-    res.status(200).json({ message: "Book returned successfully" });
+    res.status(302).redirect("/user/profile");
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error returning book" });
@@ -85,9 +93,7 @@ router.get("/books/", async (req, res) => {
       WHERE i.user_id = ?
     `;
     const values = [userId];
-
     const [rows] = await db.query(query, values);
-
     res.status(200).json({ books: rows });
   } catch (error) {
     console.error(error);

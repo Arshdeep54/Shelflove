@@ -1,12 +1,12 @@
-const {isAuthenticated}=require('../utils/index')
+const { isAuthenticated } = require("../utils/index");
 
 function isAdminMiddleware(req, res, next) {
-  if (!isAuthenticated(req) || !req.user.isAdmin) {
+  if (!req.user.isAdmin) {
     return res
       .status(403)
       .json({ message: "Unauthorized: Access restricted to admins" });
   }
-  next(); 
+  next();
 }
 
 module.exports = isAdminMiddleware;

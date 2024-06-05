@@ -8,8 +8,13 @@ function isLoggedIn(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log(decoded, "dgveg");
     req.isLoggedIn = true;
-    req.user = decoded;
+    req.userId = decoded.id;
+    req.user = {
+      id: decoded.id,
+      isAdmin: decoded.isAdmin,
+    };
   } catch (error) {
     req.isLoggedIn = false;
   }

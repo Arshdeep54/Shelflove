@@ -3,15 +3,30 @@ const router = require("express").Router();
 const bcrypt = require("bcrypt");
 
 const jwt = require("jsonwebtoken");
-router.post("/signup", async (req, res) => {
-  const { username, email, password } = req.body;
+const isLoggedIn = require("../../middlewares/isLoggedIn");
+router.post("/signup", isLoggedIn, async (req, res) => {
+  const isLoggedIn = req.isLoggedIn;
+  const { username, email, password, password2 } = req.body;
 
-  if (!username || !email || !password) {
-    return res.status(400).json({ message: "Missing required fields" });
+  if (!username || !email || !password || !password2) {
+    return res.status(400).render("signup", {
+      isLoggedIn,
+      user: req.user,
+      url: req.protocol + "://" + req.headers.host,
+      errorMessage: "Missing required fields",
+    });
   }
 
   try {
     const salt = await bcrypt.genSalt(10);
+    if (password != password2) {
+      return res.status(400).render("signup", {
+        isLoggedIn,
+        user: req.user,
+        url: req.protocol + "://" + req.headers.host,
+        errorMessage: "Passwords didn't match",
+      });
+    }
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const query = `INSERT INTO user (username, email, password) VALUES (?, ?, ?)`;
@@ -19,8 +34,11 @@ router.post("/signup", async (req, res) => {
 
     db.query(query, values, (error, result) => {
       if (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Error creating user" });
+        return res.render("signup", {
+          isLoggedIn,
+          user: req.user,
+          errorMessage: "Username already exist",
+        });
       }
 
       const userID = result.insertID;
@@ -42,11 +60,15 @@ router.post("/signup", async (req, res) => {
     res.status(500).json({ message: "Error creating user" });
   }
 });
-router.post("/login", async (req, res) => {
+router.post("/login", isLoggedIn, async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res.status(400).json({ message: "Missing required fields" });
+    return res.status(400).render("login", {
+      isLoggedIn: req.isLoggedIn,
+      user: req.user,
+      errorMessage: "Missing required fields",
+    });
   }
 
   try {
@@ -54,17 +76,21 @@ router.post("/login", async (req, res) => {
     const values = [username];
 
     db.query(query, values, async (error, result) => {
-      if (!result) {
-        return res
-          .status(401)
-          .json({ message: "Invalid username or password" });
+      if (!result.length>0) {
+        console.log("returnn gbruh ");
+        return res.status(400).render("login", {
+          isLoggedIn: req.isLoggedIn,
+          errorMessage: "Invalid username or password",
+        });
       }
       const user = result[0];
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return res
-          .status(401)
-          .json({ message: "Invalid username or password" });
+        return res.status(400).render("login", {
+          isLoggedIn: req.isLoggedIn,
+          user: req.user,
+          errorMessage: "Invalid username or password",
+        });
       }
       const token = jwt.sign(
         { id: user.id, isAdmin: user.isAdmin },
@@ -84,4 +110,9 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Error logging in" });
   }
 });
+router.get("/logout", (req, res) => {
+  res.clearCookie("jwtToken"); // Clear cookie (optional)
+  res.status(200).json({ message: "Successfully logged out" });
+});
+
 module.exports = router;

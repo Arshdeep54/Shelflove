@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="sunset">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shelflove</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
-    <link type="text/css" href="../static/css/style.css" rel="stylesheet" />
-    <link
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+    <!-- <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script> -->
+    <link type="text/css" href="/css/style.css" rel="stylesheet" />
+    <!-- <link
       href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css"
       rel="stylesheet"
       type="text/css"
-    />
+    /> -->
   </head>
   <body>
     <%- include('./components/navbar.ejs') %>
@@ -81,8 +81,24 @@
       </table>
       <% } else { %>
       <p>You don't have any issued books currently.</p>
-
       <% } %>
+      <h3 class="text text-slate-400 text-2xl">Account</h3>
+      <div class="flex flex-row items-center justify-center">
+        <p class="text-xl p-4">Send Request to be admin</p>
+       
+
+        <form action="/api/user/adminrequest/" method="post">
+          <button
+            type="submit"
+            class="btn btn-accent"
+            disabled="<%=adminRequest%>"
+            id="sendAdminRequest"
+          >
+          <%= adminRequest ? "Already Sent": "Send" %>
+          </button>
+        </form>
+     
+      </div>
     </div>
   </body>
 </html>

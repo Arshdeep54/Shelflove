@@ -7,6 +7,7 @@ function isAdminMiddleware(req, res, next) {
       .json({ message: "Unauthorized: Access restricted to admins" });
   }
   next();
+
 }
 
 module.exports = isAdminMiddleware;

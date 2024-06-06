@@ -6,6 +6,7 @@ const {
   isAuthenticated,
   issuedByuser,
   returnRequested,
+  adminRequestSent,
 } = require("../utils/index");
 const route = Router();
 const isLoggedIn = require("../middlewares/isLoggedIn");
@@ -13,7 +14,11 @@ const isAdminMiddleware = require("../middlewares/isAdminMiddlware");
 
 route.get("/", isLoggedIn, (req, res) => {
   const isLoggedIn = req.isLoggedIn;
-  res.render("home", { isLoggedIn, user: req.user });
+  res.render("home", {
+    isLoggedIn,
+    user: req.user,
+    url: req.protocol + "://" + req.headers.host,
+  });
 });
 
 route.get("/books", isLoggedIn, async (req, res) => {
@@ -42,16 +47,16 @@ route.get("/books/:id", isLoggedIn, async (req, res) => {
   const isLoggedIn = req.isLoggedIn;
   try {
     const query = `SELECT * FROM book WHERE id = ?`;
-    const values = [id];
+    const values = [parseInt(id)];
     let issued;
     if (req.userId) {
-      issued = await issuedByuser(id, req.userId);
+      issued = await issuedByuser(parseInt(id), req.userId);
     } else {
       issued = false;
     }
     let returnRequest;
     if (req.userId) {
-      returnRequest = await returnRequested(id, req.userId);
+      returnRequest = await returnRequested(parseInt(id), req.userId);
     } else {
       returnRequest = false;
     }
@@ -83,6 +88,9 @@ route.get("/user/profile/", isLoggedIn, async (req, res) => {
   const id = req.userId;
   const isLoggedIn = req.isLoggedIn;
   try {
+    const adminRequest = await adminRequestSent(id);
+    console.log(adminRequest);
+
     const query = `
         SELECT u.username, u.email, i.id AS issueId, i.bookid,i.issue_date, i.return_date, b.name, b.author,i.isReturned
         FROM user u
@@ -102,6 +110,7 @@ route.get("/user/profile/", isLoggedIn, async (req, res) => {
         isLoggedIn,
         moment,
         user: req.user,
+        adminRequest: adminRequest,
       });
     });
   } catch (error) {
@@ -118,8 +127,25 @@ route.get(
   isAdminMiddleware,
   async (req, res) => {
     try {
+      const userRequestsQuery = `
+      SELECT u.id AS userId, u.username, u.email
+      FROM user u
+      WHERE adminRequest = TRUE
+    `;
+
+      const [userRequestsError, userRequestsResults] = await db.query(
+        userRequestsQuery
+      );
+
+      if (userRequestsError) {
+        console.error(userRequestsError);
+        return res
+          .status(500)
+          .render("error", { message: "Error retrieving user requests" });
+      }
+
       const query = `
-        SELECT i.id AS issueId, u.username, b.name AS bookTitle, i.issue_date, i.return_date, i.returnRequested
+        SELECT i.id AS issueId, u.username, b.name AS bookTitle,b.author, i.issue_date, i.return_date, i.returnRequested
         FROM issue i
         INNER JOIN user u ON u.id = i.user_id
         INNER JOIN book b ON b.id = i.bookid
@@ -128,7 +154,8 @@ route.get(
 
       await db.query(query, (error, results) => {
         res.render("adminDashboard", {
-          isLoggedIn,moment,
+          isLoggedIn,
+          moment,
           user: req.user,
           requestedReturns: results,
         });
@@ -141,11 +168,21 @@ route.get(
     }
   }
 );
-route.get("/login", (req, res) => {
-  return res.render("login");
+route.get("/login", isLoggedIn, (req, res) => {
+  const isLoggedIn = req.isLoggedIn;
+  res.render("login", {
+    isLoggedIn,
+    user: req.user,
+    errorMessage: null,
+  });
 });
-route.get("/signup", (req, res) => {
-  return res.render("signup");
+route.get("/signup", isLoggedIn, (req, res) => {
+  const isLoggedIn = req.isLoggedIn;
+  res.render("signup", {
+    isLoggedIn,
+    user: req.user,
+    errorMessage: null,
+  });
 });
 
 module.exports = route;

@@ -114,7 +114,35 @@ router.get("/bookissues/", async (req, res) => {
     res.status(500).json({ message: "Error retrieving book issues" });
   }
 });
+router.post("/approve/", async (req, res) => {
+  const { issueIds } = req.body;
+  console.log(issueIds);
+  if (!issueIds || !Array.isArray(issueIds) || issueIds.length === 0) {
+    console.log("No returns found for approval");
 
+    return res.status(400).json({ message: "Invalid request body" });
+  }
+
+  const query = `
+    UPDATE issue
+    SET returnRequested = FALSE, isReturned = TRUE
+    WHERE id IN (?)
+  `;
+
+  const placeholders = issueIds.map(() => "'?'");
+  const joinedPlaceholders = placeholders.join(",");
+  try {
+    const result = await db.query(query, [issueIds]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "No returns found for approval" });
+    }
+
+    res.status(200).json({ message: "Selected returns approved successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error approving returns" });
+  }
+});
 router.post("/remind/:userid", (req, res) => {});
 
 module.exports = router;

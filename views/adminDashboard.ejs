@@ -1,22 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="sunset">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shelflove</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
-    <link type="text/css" href="../static/css/style.css" rel="stylesheet" />
-    <link
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+    <!-- <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script> -->
+    <link type="text/css" href="/css/style.css" rel="stylesheet" />
+    <!-- <link
       href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css"
       rel="stylesheet"
       type="text/css"
-    />
+    /> -->
   </head>
   <body>
     <%- include('./components/navbar.ejs') %>
     <div class="mx-5 my-5">
-      <h1 class="text text-xl font-bold">Admin dashboard</h1>
+      <div class="flex flex-row justify-between">
+        <h1 class="text text-xl font-bold">Admin dashboard</h1>
+        <button class="btn btn-accent approve-btn">Approve Selected</button>
+      </div>
 
       <% if (requestedReturns.length > 0) { %>
       <h3 class="text text-slate-400 text-2xl">Requested returns</h3>
@@ -29,6 +32,7 @@
             <th>Issued Date</th>
             <th>Return Date</th>
             <th>Requested Return</th>
+            <th>Select to approve</th>
           </tr>
         </thead>
         <tbody>
@@ -36,7 +40,7 @@
           <tr>
             <td><%= returnRequest.issueId %></td>
             <td class="flex flex-row gap-2">
-              <%= returnRequest.name %>
+              <%= returnRequest.bookTitle %>
               <a href="/books/<%= returnRequest.bookid %>">
                 <svg
                   class="cursor-pointer"
@@ -75,6 +79,15 @@
               <%= moment(returnRequest.return_date).format('YYYY-MM-DD') %>
             </td>
             <td><%= returnRequest.returnRequested==0?"No":"Yes" %></td>
+            <td>
+              <input
+                type="checkbox"
+                checked="checked"
+                class="checkbox return-checkbox"
+                id="checkbox<%=returnRequest.issueId%>"
+                data-issue-id="<%= returnRequest.issueId %>"
+              />
+            </td>
           </tr>
 
           <% } %>
@@ -85,5 +98,53 @@
 
       <% } %>
     </div>
+    <script>
+      const returnCheckboxes = document.querySelectorAll(".return-checkbox");
+      const selectedIssueIds = [];
+
+      returnCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", (event) => {
+          if (event.target.checked) {
+            // Checkbox is checked, add its issue ID
+            selectedIssueIds.push(event.target.dataset.issueId);
+          } else {
+            // Checkbox is unchecked, remove its issue ID (if present)
+            const index = selectedIssueIds.indexOf(
+              event.target.dataset.issueId
+            );
+            if (index > -1) {
+              selectedIssueIds.splice(index, 1);
+            }
+          }
+        });
+      });
+      console.log(selectedIssueIds);
+      const submitButton = document.getElementsByClassName("approve-btn");
+
+      submitButton[0].addEventListener("click", (event) => {
+        event.preventDefault();
+        console.log("button clicked");
+        if (selectedIssueIds.length === 0) {
+          alert("Please select at least one checkbox");
+          return;
+        }
+
+        const requestBody = JSON.stringify({ issueIds: selectedIssueIds });
+
+        fetch("/api/admin/approve", {
+          method: "POST",
+          body: requestBody,
+          headers: { "Content-Type": "application/json" },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Response data:", data);
+            selectedIssueIds.length = 0;
+          })
+          .catch((error) => {
+            console.error("Error sending request:", error);
+          });
+      });
+    </script>
   </body>
 </html>

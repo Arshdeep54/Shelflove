@@ -45,15 +45,19 @@ async function issuedByuser(bookId, userId) {
         WHERE  bookid= ? and user_id = ? 
       `;
     const values = [bookId, userId];
-    return await db.query(query, values, (error, issues) => {
-      console.log(issues);
+    let isIssued;
+    await db.query(query, values, (error, issues) => {
       if (!issues.length > 0) {
         console.log("no issue");
-        return false;
+        isIssued = false;
+        return;
       }
       const issue = issues[0];
-      return !issue.isReturned;
+      console.log(issue, "utdy");
+      isIssued = !issue.isReturned;
+      return;
     });
+    return isIssued;
   } catch (error) {
     console.error(error);
     throw error;
@@ -68,14 +72,43 @@ async function returnRequested(bookId, userId) {
           WHERE  bookid= ? and user_id = ? 
         `;
     const values = [bookId, userId];
-    return await db.query(query, values, (error, issues) => {
-      console.log(issues);
-      if (!issues.length > 0) {
+    let isRequested;
+    await db.query(query, values, (error, returns) => {
+      if (!returns.length > 0) {
         console.log("no return");
+        isRequested = false;
+        return;
+      }
+      const returnRow = returns[0];
+      isRequested = !returnRow.returnRequested;
+      return;
+    });
+    return isRequested;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+async function adminRequestSent(userID) {
+  console.log("id", userID);
+  try {
+    const query = `
+          SELECT id,adminRequest
+          FROM user
+          WHERE id = ? 
+        ;`;
+    const values = [userID];
+    let isRequested;
+    return await db.query(query, values, (error, users) => {
+      if (!users.length > 0) {
+        console.log("no issue");
+        isRequested = false;
         return false;
       }
-      const issue = issues[0];
-      return !issue.returnRequested;
+      const user = users[0];
+      console.log(user, user.adminRequest, "utdy");
+      isRequested = user.adminRequest == 1 ? true : false;
+      return isRequested;
     });
   } catch (error) {
     console.error(error);
@@ -87,4 +120,5 @@ module.exports = {
   isAuthenticated,
   issuedByuser,
   returnRequested,
+  adminRequestSent,
 };

@@ -3,6 +3,7 @@ const moment = require("moment");
 const router = require("express").Router();
 
 const { isBookAvailable } = require("../../utils/index");
+const isLoggedIn = require("../../middlewares/isLoggedIn");
 
 router.post("/issue/", async (req, res) => {
   const { user_id, bookid } = req.body;
@@ -100,7 +101,19 @@ router.get("/books/", async (req, res) => {
     res.status(500).json({ message: "Error retrieving issued books" });
   }
 });
-
-router.get("/fav", (req, res) => {});
+router.post("/adminrequest/", isLoggedIn, async (req, res) => {
+  const userId = req.userId;
+  const query = `UPDATE user SET adminRequest = TRUE WHERE id=?`;
+  const values = [userId];
+  await db.query(query, values, (err, result) => {
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ message: "Failed to send Request or Already sent" });
+    }
+    res.status(302).redirect("/user/profile");
+  });
+});
+router.get("/fav", async (req, res) => {});
 
 module.exports = router;

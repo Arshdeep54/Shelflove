@@ -58,29 +58,52 @@ async function issuedByuser(bookId, userId) {
   }
 }
 
-async function returnRequested(bookId, userId) {
+async function issuesByuser(bookId, userId) {
   try {
     const query = `
-          SELECT id,returnRequested
-          FROM issue
-          WHERE  bookid= ? and user_id = ? 
-        `;
+    SELECT id, isReturned
+    FROM issue
+    WHERE bookId = ? AND user_id = ?
+  `;
     const values = [bookId, userId];
-    let isRequested;
-    await db.query(query, values, (error, returns) => {
-      if (!returns.length > 0) {
-        isRequested = false;
-        return;
+
+    return await db.query(query, values, (error, issues) => {
+      if (error) throw error;
+      if (!issues.length) {
+        return { isIssued: false, isRequested: false };
       }
-      const returnRow = returns[0];
-      isRequested = !returnRow.returnRequested;
-      return;
+      const issue = issues[0];
+      const isIssued = !issue.isReturned;
+      const isRequested = issue.returnRequested == 0 ? false : true;
+
+      return { isIssued, isRequested };
     });
-    return isRequested;
+
+    // const query = `
+    //     SELECT id,isReturned
+    //     FROM issue
+    //     WHERE  bookid= ? and user_id = ?
+    //   `;
+    // const values = [bookId, userId];
+    // let isIssued;
+    // let isRequested;
+
+    // return await db.query(query, values, (error, issues) => {
+    //   if (!issues.length > 0) {
+    //     isIssued = false;
+    //     isRequested = false;
+    //     return [isIssued,isRequested]
+    //   }
+    //   const issue = issues[0];
+    //   isIssued = !issue.isReturned;
+    //   isRequested = issue.returnRequested == 0 ? false : true;
+    //   return [isIssued,isRequested]
+    // });
   } catch (error) {
     throw error;
   }
 }
+
 async function adminRequestSent(userID) {
   try {
     const query = `
@@ -106,7 +129,7 @@ async function adminRequestSent(userID) {
 module.exports = {
   isBookAvailable,
   isAuthenticated,
+  issuesByuser,
   issuedByuser,
-  returnRequested,
   adminRequestSent,
 };

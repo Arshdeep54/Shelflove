@@ -19,33 +19,37 @@ router.post("/issue/", async (req, res) => {
       return res.status(400).json({ message: "Book is not available" });
     }
 
-    const existingIssue = await db.query(
+    await db.query(
       `SELECT * FROM issue WHERE user_id = ? AND isReturned = FALSE`,
-      [user_id]
-    );
+      [user_id],
+      async (err, existingIssue) => {
+        if (existingIssue.length > 0) {
+          res
+            .status(400)
+            .render("error", { message: "User has an outstanding loan" });
+          return;
+        }
+        const today = moment().format("YYYY-MM-DD");
+        const returnDate = moment(today).add(14, "days").format("YYYY-MM-DD");
 
-    if (existingIssue.length > 0) {
-      return res.status(400).json({ message: "User has an outstanding loan" });
-    }
+        const query = `
+            INSERT INTO issue (user_id, bookid, issue_date, return_date)
+            VALUES (?, ?, ?, ?)
+          `;
+        const values = [user_id, bookid, today, returnDate];
 
-    const today = moment().format("YYYY-MM-DD");
-    const returnDate = moment(today).add(14, "days").format("YYYY-MM-DD");
-
-    const query = `
-        INSERT INTO issue (user_id, bookid, issue_date, return_date)
-        VALUES (?, ?, ?, ?)
-      `;
-    const values = [user_id, bookid, today, returnDate];
-
-    db.query(query, values, (error, result) => {
-      if (error) {
-        return res.status(500).render("error",{ message: "Error issuing book" });
+        await db.query(query, values, (error, result) => {
+          if (error) {
+            return res
+              .status(500)
+              .render("error", { message: "Error issuing book" });
+          }
+          res.redirect(`/books/${bookid}`);
+        });
       }
-
-      res.status(201).json({ message: "Book issued successfully", returnDate });
-    });
+    );
   } catch (error) {
-    res.status(500).render("error",{ message: "Error issuing book" });
+    res.status(500).render("error", { message: "Error issuing book" });
   }
 });
 
@@ -63,9 +67,7 @@ router.post("/return/", async (req, res) => {
         WHERE user_id = ? AND bookid = ?
       `;
     const values = [user_id, bookid];
-
     const result = await db.query(query, values);
-
     if (result.affectedRows === 0) {
       return res
         .status(404)
@@ -74,7 +76,7 @@ router.post("/return/", async (req, res) => {
 
     res.status(302).redirect("/user/profile");
   } catch (error) {
-    res.status(500).render("error",{ message: "Error returning book" });
+    res.status(500).render("error", { message: "Error returning book" });
   }
 });
 
@@ -94,7 +96,9 @@ router.get("/books/", async (req, res) => {
     const [rows] = await db.query(query, values);
     res.status(200).json({ books: rows });
   } catch (error) {
-    res.status(500).render("error",{ message: "Error retrieving issued books" });
+    res
+      .status(500)
+      .render("error", { message: "Error retrieving issued books" });
   }
 });
 router.post("/adminrequest/", isLoggedIn, async (req, res) => {

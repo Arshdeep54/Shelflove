@@ -7,6 +7,7 @@ const {
   issuedByuser,
   returnRequested,
   adminRequestSent,
+  issuesByuser,
 } = require("../utils/index");
 const route = Router();
 const isLoggedIn = require("../middlewares/isLoggedIn");
@@ -46,38 +47,35 @@ route.get("/books/:id", isLoggedIn, async (req, res) => {
   try {
     const query = `SELECT * FROM book WHERE id = ? `;
     const values = [parseInt(id)];
-    let issued;
+    
+    let isIssued;
+
     if (req.userId) {
-      issued = await issuedByuser(parseInt(id), req.userId);
+      isIssued = await issuedByuser(parseInt(id), req.userId);
     } else {
-      issued = false;
+      isIssued = false;
     }
-    let returnRequest;
-    if (req.userId) {
-      returnRequest = await returnRequested(parseInt(id), req.userId);
-    } else {
-      returnRequest = false;
-    }
-    await db.query(query, values, (error, result) => {
+    await db.query(query, values, async (error, result) => {
       if (!result) {
         return res
           .status(404)
           .render("error", { message: "Book not found" + error });
       }
+     
       const book = result[0];
       res.render("bookdetail", {
         isLoggedIn,
         userId: req.userId,
         user: req.user,
         book: book,
-        issuedByuser: issued,
-        returnRequest,
+        issuedByuser: isIssued,
+        returnRequest: false,
       });
     });
   } catch (error) {
     res
       .status(500)
-      .render("error", { message: "Error retrieving book details"  });
+      .render("error", { message: "Error retrieving book details" + error });
   }
 });
 route.get("/user/profile/", isLoggedIn, async (req, res) => {

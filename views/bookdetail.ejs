@@ -32,9 +32,9 @@
         <button
           type="submit"
           class="btn btn-secondary"
-          disabled="<%=returnRequest%>"
+          disabled="<%= returnRequest %>"
         >
-          Return Request
+          Return Request 
         </button>
       </form>
       <% } else { %>
@@ -46,7 +46,7 @@
           name="user_id"
           value="<%= userId %>"
         />
-        <button type="submit" class="btn btn-secondary">Issue Book</button>
+        <button type="submit" class="btn btn-secondary">Issue Book </button>
       </form>
       <% }}} else { %>
       <p>Please log in to issue a book.</p>
@@ -69,28 +69,28 @@
     </form>
     <%}%>
     <script>
-      const issueForm = document.getElementById("issueForm");
-      issueForm.addEventListener("submit", (event) => {
-        event.preventDefault(); // Prevent default form submission
-        const data = {
-          user_id: issueForm.elements.user_id.value,
-          bookid: issueForm.elements.bookid.value,
-        };
+      // const issueForm = document.getElementById("issueForm");
+      // issueForm.addEventListener("submit", (event) => {
+      //   event.preventDefault(); // Prevent default form submission
+      //   const data = {
+      //     user_id: issueForm.elements.user_id.value,
+      //     bookid: issueForm.elements.bookid.value,
+      //   };
 
-        const jsonData = JSON.stringify(data); // Convert to JSON string
+      //   const jsonData = JSON.stringify(data); // Convert to JSON string
 
-        fetch("/api/user/issue", {
-          method: "POST",
-          body: jsonData,
-          headers: { "Content-Type": "application/json" },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-          })
-          .catch((error) => {
-            alert(error);
-          });
-      });
+      //   fetch("/api/user/issue", {
+      //     method: "POST",
+      //     body: jsonData,
+      //     headers: { "Content-Type": "application/json" },
+      //   })
+      //     .then((response) => response.json())
+      //     .then((data) => {
+      //     })
+      //     .catch((error) => {
+      //       alert(error);
+      //     });
+      // });
       const requestForm = document.getElementById("requestForm");
       requestForm.addEventListener("submit", (event) => {
         event.preventDefault(); // Prevent default form submission

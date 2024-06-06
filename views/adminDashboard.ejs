@@ -7,22 +7,24 @@
     <!-- <script src="https://cdn.tailwindcss.com"></script> -->
     <!-- <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script> -->
     <link type="text/css" href="/css/style.css" rel="stylesheet" />
-    <!-- <link
+
+    <link
       href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css"
       rel="stylesheet"
       type="text/css"
-    /> -->
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body>
     <%- include('./components/navbar.ejs') %>
     <div class="mx-5 my-5">
-      <div class="flex flex-row justify-between">
-        <h1 class="text text-xl font-bold">Admin dashboard</h1>
-        <button class="btn btn-accent approve-btn">Approve Selected</button>
-      </div>
+      <h1 class="text text-xl font-bold">Admin dashboard</h1>
 
       <% if (requestedReturns.length > 0) { %>
-      <h3 class="text text-slate-400 text-2xl">Requested returns</h3>
+      <div class="flex flex-row justify-between">
+        <h3 class="text text-slate-400 text-2xl">Requested returns</h3>
+        <button class="btn btn-accent approve-btn">Approve Selected</button>
+      </div>
       <table class="table table-striped">
         <thead>
           <tr class="text text-blue-500 text-lg">
@@ -94,10 +96,139 @@
         </tbody>
       </table>
       <% } else { %>
-      <p>You don't have any requests currently.</p>
+      <p>No new Requests</p>
 
       <% } %>
+
+      <br />
+      <div class="divider"></div>
+      <% if (requestedAdmins.length > 0) { %>
+      <div>
+        <div class="flex flex-row justify-between">
+          <h3 class="text text-slate-400 text-2xl">
+            Requested users to be Admin
+          </h3>
+          <button class="btn btn-accent approve-admin-btn">
+            Approve Selected
+          </button>
+        </div>
+        <table class="table table-striped">
+          <thead>
+            <tr class="text text-blue-500 text-lg">
+              <th>User ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Select to approve</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const adminRequest of requestedAdmins) { %>
+            <tr>
+              <td><%= adminRequest.userId %></td>
+
+              <td><%= adminRequest.username %></td>
+              <td><%= adminRequest.email %></td>
+
+              <td>
+                <input
+                  type="checkbox"
+                  class="checkbox admin-checkbox"
+                  id="checkbox<%=adminRequest.userId%>"
+                  data-user-id="<%= adminRequest.userId %>"
+                />
+              </td>
+            </tr>
+
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+      <br />
+      <div class="divider"></div>
+      <% } %>
     </div>
+    <button class="btn addBookModal" onclick="addBookModal.showModal()">
+      Add a new Book
+    </button>
+    <button class="btn btn-secondary mx-4" id="logout">Logout</button>
+
+    <dialog id="addBookModal" class="modal">
+      <div class="modal-box w-11/12 max-w-5xl">
+        <form method="dialog">
+          <button
+            class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+          >
+            ✕
+          </button>
+        </form>
+        <h3 class="font-bold text-lg">Add New book</h3>
+        <div class="divider divider-accent"></div>
+        <form action="/api/admin/addbook/" method="post" id="addnewbookForm">
+          <div>
+            <label class="text-xl" for="title">Title</label>
+            <input
+              type="text"
+              name="title"
+              class="input input-bordered w-full max-w-xs my-3 mx-3"
+              placeholder="Enter book title"
+            />
+          </div>
+          <div>
+            <label class="text-xl" for="author">Author</label>
+            <input
+              type="text"
+              name="author"
+              class="input input-bordered w-full max-w-xs my-3 mx-3"
+              placeholder="Enter book Author"
+            />
+          </div>
+          <div class="flex flex-row items-start">
+            <label class="text-xl mt-5" for="description">Description</label>
+
+            <textarea
+              class="textarea textarea-bordered textarea-lg mx-3 resize-none border-solid outline-none rounded-xl my-3"
+              name="description"
+              placeholder="Enter the book description"
+            ></textarea>
+          </div>
+          <div>
+            <label class="text-xl" for="quantity">Quantity</label>
+            <input
+              type="number"
+              name="quantity"
+              class="input input-bordered w-full max-w-xs my-3 mx-3"
+              placeholder="Enter how many books to enter"
+            />
+          </div>
+          <div>
+            <label class="text-xl" for="rating">Rating</label>
+            <input
+              type="number"
+              name="rating"
+              class="input input-bordered w-full max-w-xs my-3 mx-3"
+              placeholder="Enter the rating of the book"
+            />
+          </div>
+          <div>
+            <label class="text-xl" for="publication_date"
+              >Publication Date:</label
+            >
+            <input
+              type="date"
+              name="publication_date"
+              class="input outline-none focus:outline-none my-3 mx-3"
+            />
+          </div>
+        </form>
+
+        <div class="modal-action">
+          <form method="dialog">
+            <button class="btn btn-primary addbook" type="submit" id="addbook">Add</button>
+          </form>
+        </div>
+      </div>
+    </dialog>
+    <% if (requestedReturns.length > 0) { %>
     <script>
       const returnCheckboxes = document.querySelectorAll(".return-checkbox");
       const selectedIssueIds = [];
@@ -105,10 +236,8 @@
       returnCheckboxes.forEach((checkbox) => {
         checkbox.addEventListener("change", (event) => {
           if (event.target.checked) {
-            // Checkbox is checked, add its issue ID
             selectedIssueIds.push(event.target.dataset.issueId);
           } else {
-            // Checkbox is unchecked, remove its issue ID (if present)
             const index = selectedIssueIds.indexOf(
               event.target.dataset.issueId
             );
@@ -119,8 +248,8 @@
         });
       });
       console.log(selectedIssueIds);
-      const submitButton = document.getElementsByClassName("approve-btn");
 
+      const submitButton = document.getElementsByclass("approve-btn");
       submitButton[0].addEventListener("click", (event) => {
         event.preventDefault();
         console.log("button clicked");
@@ -144,6 +273,84 @@
           .catch((error) => {
             console.error("Error sending request:", error);
           });
+      });
+    </script>
+    <% } %> <% if (requestedAdmins.length > 0) { %>
+    <script>
+      const adminCheckboxes = document.querySelectorAll(".admin-checkbox");
+      console.log(adminCheckboxes);
+      const selectedUserIds = [];
+
+      adminCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", (event) => {
+          if (event.target.checked) {
+            selectedUserIds.push(event.target.dataset.userId);
+          } else {
+            const index = selectedUserIds.indexOf(event.target.dataset.userId);
+            if (index > -1) {
+              selectedUserIds.splice(index, 1);
+            }
+          }
+        });
+      });
+      console.log(selectedUserIds);
+      const submitAdminButton =
+        document.getElementsByclass("approve-admin-btn");
+
+      submitAdminButton[0].addEventListener("click", (event) => {
+        event.preventDefault();
+        console.log("button clicked");
+        if (selectedUserIds.length === 0) {
+          alert("Please select at least one checkbox");
+          return;
+        }
+
+        const requestBody = JSON.stringify({ userIds: selectedUserIds });
+
+        fetch("/api/admin/approveadmin/", {
+          method: "POST",
+          body: requestBody,
+          headers: { "Content-Type": "application/json" },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Response data:", data);
+            selectedUserIds.length = 0;
+          })
+          .catch((error) => {
+            console.error("Error sending request:", error);
+          });
+      });
+    </script>
+    <% } %>
+
+    <script>
+      const logoutButton = document.getElementById("logout");
+      logoutButton.addEventListener("click", async () => {
+        console.log("clicked");
+        try {
+          const response = await fetch("/api/auth/logout", {
+            method: "GET",
+          });
+          const data = await response.json();
+          if (data.message === "Successfully logged out") {
+            console.log("Logged out successfully!");
+            window.location.href = "/login";
+          } else {
+            console.error("Error logging out:", data.message);
+          }
+        } catch (error) {
+          console.error("Error sending logout request:", error);
+        }
+      });
+    </script>
+    <script>
+      const addBookButton = document.getElementById("addbook");
+      const addnewbookForm = document.getElementById("addnewbookForm");
+
+      addBookButton.addEventListener("click", () => {
+        console.log("btn clicked")
+        addnewbookForm.submit();
       });
     </script>
   </body>

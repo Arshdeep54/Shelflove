@@ -85,7 +85,6 @@
       <h3 class="text text-slate-400 text-2xl">Account</h3>
       <div class="flex flex-row items-center justify-center">
         <p class="text-xl p-4">Send Request to be admin</p>
-       
 
         <form action="/api/user/adminrequest/" method="post">
           <button
@@ -94,11 +93,32 @@
             disabled="<%=adminRequest%>"
             id="sendAdminRequest"
           >
-          <%= adminRequest ? "Already Sent": "Send" %>
+            <%= adminRequest ? "Already Sent": "Send" %>
           </button>
         </form>
-     
+
       </div>
+      <button class="btn btn-secondary mx-4" id="logout">Logout</button>
     </div>
+    <script>
+      const logoutButton = document.getElementById("logout");
+      logoutButton.addEventListener("click", async () => {
+        console.log("clicked");
+        try {
+          const response = await fetch("/api/auth/logout", {
+            method: "GET",
+          });
+          const data = await response.json();
+          if (data.message === "Successfully logged out") {
+            console.log("Logged out successfully!");
+            window.location.href = "/login";
+          } else {
+            console.error("Error logging out:", data.message);
+          }
+        } catch (error) {
+          console.error("Error sending logout request:", error);
+        }
+      });
+    </script>
   </body>
 </html>

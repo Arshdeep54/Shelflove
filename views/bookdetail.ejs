@@ -19,22 +19,38 @@
       <h1 class="text m-1 font-bold"><%= book.name %></h1>
       <p class="text m-1 font-bold">By: <%= book.author %></p>
 
-      <% if (isLoggedIn) { if(issuedByuser){ %>
+      <% if (isLoggedIn) { if(!user.isAdmin){if( issuedByuser){ %>
       <button type="submit" class="btn btn-secondary" disabled>Issued</button>
       <form action="/api/user/return/" method="post" id="requestForm">
         <input type="hidden" id="bookid" name="bookid" value="<%= book.id %>" />
-        <input type="hidden" id="user_id" name="user_id" value="<%= userId %>" />
-        <button type="submit" class="btn btn-secondary" disabled="<%=returnRequest%>">Return Request</button>
+        <input
+          type="hidden"
+          id="user_id"
+          name="user_id"
+          value="<%= userId %>"
+        />
+        <button
+          type="submit"
+          class="btn btn-secondary"
+          disabled="<%=returnRequest%>"
+        >
+          Return Request
+        </button>
       </form>
       <% } else { %>
       <form action="/api/user/issue/" method="post" id="issueForm">
         <input type="hidden" id="bookid" name="bookid" value="<%= book.id %>" />
-        <input type="hidden" id="user_id" name="user_id" value="<%= userId %>" />
+        <input
+          type="hidden"
+          id="user_id"
+          name="user_id"
+          value="<%= userId %>"
+        />
         <button type="submit" class="btn btn-secondary">Issue Book</button>
       </form>
-      <% } } else { %>
+      <% }}} else { %>
       <p>Please log in to issue a book.</p>
-      <% } %>
+      <% }%>
       <div class="flex flex-col text-lg m-5 gap-5">
         <p>
           <span class="text-primary">Description:</span> <%= book.description %>
@@ -47,6 +63,11 @@
         <p><span class="text-primary">Quantity:</span> <%= book.quantity %></p>
       </div>
     </div>
+    <% if(user.isAdmin) {%>
+    <form action="/api/admin/deletebook/<%=book.id%>" method="post">
+      <button class="btn btn-primary" type="submit">Delete book</button>
+    </form>
+    <%}%>
     <script>
       const issueForm = document.getElementById("issueForm");
       issueForm.addEventListener("submit", (event) => {

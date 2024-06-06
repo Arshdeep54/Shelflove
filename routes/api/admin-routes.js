@@ -1,4 +1,4 @@
-const db = require("../../dbconfig");
+const db = require("../../config/dbconfig");
 
 const router = require("express").Router();
 
@@ -36,8 +36,7 @@ router.post("/addbook", async (req, res) => {
         console.error(error);
         return res.status(500).json({ message: "Error adding book" });
       }
-
-      res.status(201).json({ message: "Book added successfully" });
+      res.redirect("/books");
     });
   } catch (error) {
     console.error(error);
@@ -97,7 +96,25 @@ router.post("/updatebook/:id", async (req, res) => {
     res.status(500).json({ message: "Error updating book" });
   }
 });
-
+router.post("/deletebook/:bookId", async (req, res) => {
+  const { bookId } = req.params;
+  try {
+    const query = `UPDATE book SET quantity = 0 WHERE id= ? ;`;
+    const values = [parseInt(bookId)];
+    await db.query(query, values, (err, result) => {
+      console.log(result);
+      if (err) {
+        console.log(err);
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+      return res.redirect("/books");
+    });
+  } catch (error) {
+    res.render("error", { message: error });
+  }
+});
 router.get("/bookissues/", async (req, res) => {
   try {
     const query = `
@@ -135,6 +152,40 @@ router.post("/approve/", async (req, res) => {
     const result = await db.query(query, [issueIds]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "No returns found for approval" });
+    }
+
+    res.status(200).json({ message: "Selected returns approved successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error approving returns" });
+  }
+});
+
+router.post("/approveadmin/", async (req, res) => {
+  const { userIds } = req.body;
+  console.log(userIds);
+  if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+    console.log("No admin request found for approval");
+
+    return res
+      .status(400)
+      .json({ message: "No admin request found for approval" });
+  }
+
+  const query = `
+    UPDATE user
+    SET adminRequest = FALSE, isAdmin = TRUE
+    WHERE id IN (?)
+  `;
+
+  const placeholders = userIds.map(() => "'?'");
+  const joinedPlaceholders = placeholders.join(",");
+  try {
+    const result = await db.query(query, [userIds]);
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ message: "No admin request found for approval" });
     }
 
     res.status(200).json({ message: "Selected returns approved successfully" });

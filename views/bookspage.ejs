@@ -15,12 +15,13 @@
   </head>
   <body>
     <%- include('./components/navbar.ejs') %>
+<section class="m-5">
 
-    <h1>All Available Books</h1>
+    <h1 class="text text-xl font-bold">All Available Books</h1>
     <% if (books) { %>
-    <table>
+    <table class="table table-striped">
       <thead>
-        <tr>
+        <tr class="text text-blue-500 text-lg">
           <th>Title</th>
           <th>Author</th>
           <th>Rating</th>
@@ -43,5 +44,7 @@
     <% } else { %>
     <p>No books found.</p>
     <% } %>
+</section>
+
   </body>
 </html>

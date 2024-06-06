@@ -1,6 +1,6 @@
 const { render } = require("ejs");
 const { Router } = require("express");
-const db = require("../dbconfig");
+const db = require("../config/dbconfig");
 const moment = require("moment");
 const {
   isAuthenticated,
@@ -25,7 +25,7 @@ route.get("/books", isLoggedIn, async (req, res) => {
   const isLoggedIn = req.isLoggedIn;
 
   try {
-    const query = `SELECT * FROM book;`;
+    const query = `SELECT * FROM book WHERE quantity > 0;`;
     await db.query(query, (error, result) => {
       console.log(result);
       res.render("bookspage", {
@@ -46,7 +46,7 @@ route.get("/books/:id", isLoggedIn, async (req, res) => {
   const { id } = req.params;
   const isLoggedIn = req.isLoggedIn;
   try {
-    const query = `SELECT * FROM book WHERE id = ?`;
+    const query = `SELECT * FROM book WHERE id = ? `;
     const values = [parseInt(id)];
     let issued;
     if (req.userId) {
@@ -132,17 +132,19 @@ route.get(
       FROM user u
       WHERE adminRequest = TRUE
     `;
-
-      const [userRequestsError, userRequestsResults] = await db.query(
-        userRequestsQuery
+      let requestedAdmins;
+      await db.query(
+        userRequestsQuery,
+        (userRequestsError, userRequestsResults) => {
+          if (userRequestsError) {
+            console.error(userRequestsError);
+            return res
+              .status(500)
+              .render("error", { message: "Error retrieving user requests" });
+          }
+          requestedAdmins = userRequestsResults;
+        }
       );
-
-      if (userRequestsError) {
-        console.error(userRequestsError);
-        return res
-          .status(500)
-          .render("error", { message: "Error retrieving user requests" });
-      }
 
       const query = `
         SELECT i.id AS issueId, u.username, b.name AS bookTitle,b.author, i.issue_date, i.return_date, i.returnRequested
@@ -158,13 +160,14 @@ route.get(
           moment,
           user: req.user,
           requestedReturns: results,
+          requestedAdmins,
         });
       });
     } catch (error) {
       console.error(error);
-      res
-        .status(500)
-        .render("error", { message: "Error retrieving requested returns" });
+      res.status(500).render("error", {
+        message: "Error retrieving requested returns" + error,
+      });
     }
   }
 );

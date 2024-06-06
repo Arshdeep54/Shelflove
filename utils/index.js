@@ -1,4 +1,4 @@
-const db = require("../dbconfig");
+const db = require("../config/dbconfig");
 const jwt = require("jsonwebtoken");
 async function isBookAvailable(bookId) {
   try {

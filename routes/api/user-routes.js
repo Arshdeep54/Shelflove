@@ -39,15 +39,13 @@ router.post("/issue/", async (req, res) => {
 
     db.query(query, values, (error, result) => {
       if (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Error issuing book" });
+        return res.status(500).render("error",{ message: "Error issuing book" });
       }
 
       res.status(201).json({ message: "Book issued successfully", returnDate });
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error issuing book" });
+    res.status(500).render("error",{ message: "Error issuing book" });
   }
 });
 
@@ -76,8 +74,7 @@ router.post("/return/", async (req, res) => {
 
     res.status(302).redirect("/user/profile");
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error returning book" });
+    res.status(500).render("error",{ message: "Error returning book" });
   }
 });
 
@@ -97,8 +94,7 @@ router.get("/books/", async (req, res) => {
     const [rows] = await db.query(query, values);
     res.status(200).json({ books: rows });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error retrieving issued books" });
+    res.status(500).render("error",{ message: "Error retrieving issued books" });
   }
 });
 router.post("/adminrequest/", isLoggedIn, async (req, res) => {

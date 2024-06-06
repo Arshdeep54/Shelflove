@@ -223,7 +223,9 @@
 
         <div class="modal-action">
           <form method="dialog">
-            <button class="btn btn-primary addbook" type="submit" id="addbook">Add</button>
+            <button class="btn btn-primary addbook" type="submit" id="addbook">
+              Add
+            </button>
           </form>
         </div>
       </div>
@@ -247,12 +249,10 @@
           }
         });
       });
-      console.log(selectedIssueIds);
 
       const submitButton = document.getElementsByclass("approve-btn");
       submitButton[0].addEventListener("click", (event) => {
         event.preventDefault();
-        console.log("button clicked");
         if (selectedIssueIds.length === 0) {
           alert("Please select at least one checkbox");
           return;
@@ -267,18 +267,13 @@
         })
           .then((response) => response.json())
           .then((data) => {
-            console.log("Response data:", data);
             selectedIssueIds.length = 0;
-          })
-          .catch((error) => {
-            console.error("Error sending request:", error);
           });
       });
     </script>
     <% } %> <% if (requestedAdmins.length > 0) { %>
     <script>
       const adminCheckboxes = document.querySelectorAll(".admin-checkbox");
-      console.log(adminCheckboxes);
       const selectedUserIds = [];
 
       adminCheckboxes.forEach((checkbox) => {
@@ -293,13 +288,11 @@
           }
         });
       });
-      console.log(selectedUserIds);
       const submitAdminButton =
         document.getElementsByclass("approve-admin-btn");
 
       submitAdminButton[0].addEventListener("click", (event) => {
         event.preventDefault();
-        console.log("button clicked");
         if (selectedUserIds.length === 0) {
           alert("Please select at least one checkbox");
           return;
@@ -314,11 +307,7 @@
         })
           .then((response) => response.json())
           .then((data) => {
-            console.log("Response data:", data);
             selectedUserIds.length = 0;
-          })
-          .catch((error) => {
-            console.error("Error sending request:", error);
           });
       });
     </script>
@@ -327,20 +316,18 @@
     <script>
       const logoutButton = document.getElementById("logout");
       logoutButton.addEventListener("click", async () => {
-        console.log("clicked");
         try {
           const response = await fetch("/api/auth/logout", {
             method: "GET",
           });
           const data = await response.json();
           if (data.message === "Successfully logged out") {
-            console.log("Logged out successfully!");
             window.location.href = "/login";
           } else {
-            console.error("Error logging out:", data.message);
+            error(data.message);
           }
         } catch (error) {
-          console.error("Error sending logout request:", error);
+          alert(error);
         }
       });
     </script>
@@ -349,7 +336,6 @@
       const addnewbookForm = document.getElementById("addnewbookForm");
 
       addBookButton.addEventListener("click", () => {
-        console.log("btn clicked")
         addnewbookForm.submit();
       });
     </script>

@@ -96,27 +96,24 @@
             <%= adminRequest ? "Already Sent": "Send" %>
           </button>
         </form>
-
       </div>
       <button class="btn btn-secondary mx-4" id="logout">Logout</button>
     </div>
     <script>
       const logoutButton = document.getElementById("logout");
       logoutButton.addEventListener("click", async () => {
-        console.log("clicked");
         try {
           const response = await fetch("/api/auth/logout", {
             method: "GET",
           });
           const data = await response.json();
           if (data.message === "Successfully logged out") {
-            console.log("Logged out successfully!");
             window.location.href = "/login";
           } else {
-            console.error("Error logging out:", data.message);
+            alert(data.message);
           }
         } catch (error) {
-          console.error("Error sending logout request:", error);
+          alert(error);
         }
       });
     </script>

@@ -33,14 +33,12 @@ router.post("/addbook", async (req, res) => {
 
     db.query(query, values, (error, result) => {
       if (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Error adding book" });
+        return res.status(500).render("error",{ message: "Error adding book" });
       }
       res.redirect("/books");
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error adding book" });
+    res.status(500).render("error",{ message: "Error adding book" });
   }
 });
 router.post("/updatebook/:id", async (req, res) => {
@@ -91,9 +89,9 @@ router.post("/updatebook/:id", async (req, res) => {
     }
 
     res.status(200).json({ message: "Book updated successfully" });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error updating book" });
+    res.status(500).render("error",{ message: "Error updating book" });
   }
 });
 router.post("/deletebook/:bookId", async (req, res) => {
@@ -102,9 +100,8 @@ router.post("/deletebook/:bookId", async (req, res) => {
     const query = `UPDATE book SET quantity = 0 WHERE id= ? ;`;
     const values = [parseInt(bookId)];
     await db.query(query, values, (err, result) => {
-      console.log(result);
       if (err) {
-        console.log(err);
+        return res.status(404).json({ message: "Book not found" });
       }
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: "Book not found" });
@@ -127,15 +124,12 @@ router.get("/bookissues/", async (req, res) => {
       res.status(200).json({ bookIssues: result });
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error retrieving book issues" });
+    res.status(500).render("error",{ message: "Error retrieving book issues" });
   }
 });
 router.post("/approve/", async (req, res) => {
   const { issueIds } = req.body;
-  console.log(issueIds);
   if (!issueIds || !Array.isArray(issueIds) || issueIds.length === 0) {
-    console.log("No returns found for approval");
 
     return res.status(400).json({ message: "Invalid request body" });
   }
@@ -156,16 +150,13 @@ router.post("/approve/", async (req, res) => {
 
     res.status(200).json({ message: "Selected returns approved successfully" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error approving returns" });
+    res.status(500).render("erro",{ message: "Error approving returns" });
   }
 });
 
 router.post("/approveadmin/", async (req, res) => {
   const { userIds } = req.body;
-  console.log(userIds);
   if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
-    console.log("No admin request found for approval");
 
     return res
       .status(400)
@@ -190,8 +181,7 @@ router.post("/approveadmin/", async (req, res) => {
 
     res.status(200).json({ message: "Selected returns approved successfully" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error approving returns" });
+    res.status(500).render("error",{ message: "Error approving returns" });
   }
 });
 router.post("/remind/:userid", (req, res) => {});

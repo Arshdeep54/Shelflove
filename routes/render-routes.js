@@ -27,7 +27,6 @@ route.get("/books", isLoggedIn, async (req, res) => {
   try {
     const query = `SELECT * FROM book WHERE quantity > 0;`;
     await db.query(query, (error, result) => {
-      console.log(result);
       res.render("bookspage", {
         isLoggedIn,
         user: req.user,
@@ -35,7 +34,6 @@ route.get("/books", isLoggedIn, async (req, res) => {
       });
     });
   } catch (error) {
-    console.error(error);
     res
       .status(500)
       .render("error", { message: "Error retrieving books " + error });
@@ -60,7 +58,6 @@ route.get("/books/:id", isLoggedIn, async (req, res) => {
     } else {
       returnRequest = false;
     }
-    console.log(issued, "tcyvu");
     await db.query(query, values, (error, result) => {
       if (!result) {
         return res
@@ -78,10 +75,9 @@ route.get("/books/:id", isLoggedIn, async (req, res) => {
       });
     });
   } catch (error) {
-    console.error(error);
     res
       .status(500)
-      .render("error", { message: "Error retrieving book details" });
+      .render("error", { message: "Error retrieving book details"  });
   }
 });
 route.get("/user/profile/", isLoggedIn, async (req, res) => {
@@ -89,7 +85,6 @@ route.get("/user/profile/", isLoggedIn, async (req, res) => {
   const isLoggedIn = req.isLoggedIn;
   try {
     const adminRequest = await adminRequestSent(id);
-    console.log(adminRequest);
 
     const query = `
         SELECT u.username, u.email, i.id AS issueId, i.bookid,i.issue_date, i.return_date, b.name, b.author,i.isReturned
@@ -114,7 +109,6 @@ route.get("/user/profile/", isLoggedIn, async (req, res) => {
       });
     });
   } catch (error) {
-    console.error(error);
     res
       .status(500)
       .render("error", { message: "Error retrieving user profile" });
@@ -137,7 +131,6 @@ route.get(
         userRequestsQuery,
         (userRequestsError, userRequestsResults) => {
           if (userRequestsError) {
-            console.error(userRequestsError);
             return res
               .status(500)
               .render("error", { message: "Error retrieving user requests" });
@@ -164,7 +157,6 @@ route.get(
         });
       });
     } catch (error) {
-      console.error(error);
       res.status(500).render("error", {
         message: "Error retrieving requested returns" + error,
       });

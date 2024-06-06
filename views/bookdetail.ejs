@@ -76,7 +76,6 @@
           user_id: issueForm.elements.user_id.value,
           bookid: issueForm.elements.bookid.value,
         };
-        console.log(data);
 
         const jsonData = JSON.stringify(data); // Convert to JSON string
 
@@ -87,10 +86,9 @@
         })
           .then((response) => response.json())
           .then((data) => {
-            console.log(data);
           })
           .catch((error) => {
-            console.error(error);
+            alert(error);
           });
       });
       const requestForm = document.getElementById("requestForm");
@@ -100,7 +98,6 @@
           user_id: requestForm.elements.user_id.value,
           bookid: requestForm.elements.bookid.value,
         };
-        console.log(data);
 
         const jsonData = JSON.stringify(data); // Convert to JSON string
 
@@ -111,10 +108,9 @@
         })
           .then((response) => response.json())
           .then((data) => {
-            console.log(data);
           })
           .catch((error) => {
-            console.error(error);
+            alert(error);
           });
       });
     </script>

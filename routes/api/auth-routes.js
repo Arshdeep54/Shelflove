@@ -56,8 +56,7 @@ router.post("/signup", isLoggedIn, async (req, res) => {
       res.redirect("/");
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error creating user" });
+    res.status(500).render("error",{ message: "Error creating user" });
   }
 });
 router.post("/login", isLoggedIn, async (req, res) => {
@@ -77,7 +76,6 @@ router.post("/login", isLoggedIn, async (req, res) => {
 
     db.query(query, values, async (error, result) => {
       if (!result.length>0) {
-        console.log("returnn gbruh ");
         return res.status(400).render("login", {
           isLoggedIn: req.isLoggedIn,
           errorMessage: "Invalid username or password",
@@ -106,8 +104,7 @@ router.post("/login", isLoggedIn, async (req, res) => {
       res.redirect("/");
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error logging in" });
+    res.status(500).render("error", {message: "Error logging in" });
   }
 });
 router.get("/logout", (req, res) => {

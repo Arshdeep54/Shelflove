@@ -150,7 +150,7 @@ router.post("/approve/", async (req, res) => {
 
     res.status(200).json({ message: "Selected returns approved successfully" });
   } catch (error) {
-    res.status(500).render("erro",{ message: "Error approving returns" });
+    res.status(500).render("error",{ message: "Error approving returns" });
   }
 });
 

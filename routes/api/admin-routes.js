@@ -1,4 +1,5 @@
 const db = require("../../config/dbconfig");
+const isLoggedIn = require("../../middlewares/isLoggedIn");
 
 const router = require("express").Router();
 
@@ -33,12 +34,14 @@ router.post("/addbook", async (req, res) => {
 
     db.query(query, values, (error, result) => {
       if (error) {
-        return res.status(500).render("error",{ message: "Error adding book" });
+        return res
+          .status(500)
+          .render("error", { message: "Error adding book" });
       }
       res.redirect("/books");
     });
   } catch (error) {
-    res.status(500).render("error",{ message: "Error adding book" });
+    res.status(500).render("error", { message: "Error adding book" });
   }
 });
 router.post("/updatebook/:id", async (req, res) => {
@@ -89,9 +92,8 @@ router.post("/updatebook/:id", async (req, res) => {
     }
 
     res.status(200).json({ message: "Book updated successfully" });
-
   } catch (error) {
-    res.status(500).render("error",{ message: "Error updating book" });
+    res.status(500).render("error", { message: "Error updating book" });
   }
 });
 router.post("/deletebook/:bookId", async (req, res) => {
@@ -124,13 +126,14 @@ router.get("/bookissues/", async (req, res) => {
       res.status(200).json({ bookIssues: result });
     });
   } catch (error) {
-    res.status(500).render("error",{ message: "Error retrieving book issues" });
+    res
+      .status(500)
+      .render("error", { message: "Error retrieving book issues" });
   }
 });
 router.post("/approve/", async (req, res) => {
   const { issueIds } = req.body;
   if (!issueIds || !Array.isArray(issueIds) || issueIds.length === 0) {
-
     return res.status(400).json({ message: "Invalid request body" });
   }
 
@@ -140,24 +143,20 @@ router.post("/approve/", async (req, res) => {
     WHERE id IN (?)
   `;
 
-  const placeholders = issueIds.map(() => "'?'");
-  const joinedPlaceholders = placeholders.join(",");
   try {
     const result = await db.query(query, [issueIds]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "No returns found for approval" });
     }
-
-    res.status(200).json({ message: "Selected returns approved successfully" });
+    res.render("adminDashboard",{isLoggedIn:req.isLoggedIn,})
   } catch (error) {
-    res.status(500).render("error",{ message: "Error approving returns" });
+    res.status(500).render("error", { message: "Error approving returns" });
   }
 });
 
 router.post("/approveadmin/", async (req, res) => {
   const { userIds } = req.body;
   if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
-
     return res
       .status(400)
       .json({ message: "No admin request found for approval" });
@@ -179,9 +178,9 @@ router.post("/approveadmin/", async (req, res) => {
         .json({ message: "No admin request found for approval" });
     }
 
-    res.status(200).json({ message: "Selected returns approved successfully" });
+    res.render("adminDashboard");
   } catch (error) {
-    res.status(500).render("error",{ message: "Error approving returns" });
+    res.status(500).render("error", { message: "Error approving returns" });
   }
 });
 router.post("/remind/:userid", (req, res) => {});

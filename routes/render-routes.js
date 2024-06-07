@@ -2,16 +2,12 @@ const { render } = require("ejs");
 const { Router } = require("express");
 const db = require("../config/dbconfig");
 const moment = require("moment");
-const {
-  isAuthenticated,
-  issuedByuser,
-  returnRequested,
-  adminRequestSent,
-  issuesByuser,
-} = require("../utils/index");
+
 const route = Router();
 const isLoggedIn = require("../middlewares/isLoggedIn");
 const isAdminMiddleware = require("../middlewares/isAdminMiddlware");
+const existingIssue = require("../middlewares/existingIssue");
+const isAdminRequestSent = require("../middlewares/isAdminRequestSent");
 
 route.get("/", isLoggedIn, (req, res) => {
   const isLoggedIn = req.isLoggedIn;
@@ -41,35 +37,28 @@ route.get("/books", isLoggedIn, async (req, res) => {
   }
 });
 
-route.get("/books/:id", isLoggedIn, async (req, res) => {
+route.get("/books/:id", isLoggedIn, existingIssue, async (req, res) => {
   const { id } = req.params;
   const isLoggedIn = req.isLoggedIn;
   try {
     const query = `SELECT * FROM book WHERE id = ? `;
     const values = [parseInt(id)];
-    
-    let isIssued;
 
-    if (req.userId) {
-      isIssued = await issuedByuser(parseInt(id), req.userId);
-    } else {
-      isIssued = false;
-    }
     await db.query(query, values, async (error, result) => {
       if (!result) {
         return res
           .status(404)
           .render("error", { message: "Book not found" + error });
       }
-     
+
       const book = result[0];
       res.render("bookdetail", {
         isLoggedIn,
         userId: req.userId,
         user: req.user,
         book: book,
-        issuedByuser: isIssued,
-        returnRequest: false,
+        issuedByuser: req.isIssued,
+        returnRequest: req.isRequested,
       });
     });
   } catch (error) {
@@ -78,40 +67,43 @@ route.get("/books/:id", isLoggedIn, async (req, res) => {
       .render("error", { message: "Error retrieving book details" + error });
   }
 });
-route.get("/user/profile/", isLoggedIn, async (req, res) => {
-  const id = req.userId;
-  const isLoggedIn = req.isLoggedIn;
-  try {
-    const adminRequest = await adminRequestSent(id);
-
-    const query = `
+route.get(
+  "/user/profile/",
+  isLoggedIn,
+  isAdminRequestSent,
+  async (req, res) => {
+    const id = req.userId;
+    const isLoggedIn = req.isLoggedIn;
+    try {
+      const query = `
         SELECT u.username, u.email, i.id AS issueId, i.bookid,i.issue_date, i.return_date, b.name, b.author,i.isReturned
         FROM user u
         INNER JOIN issue i ON u.id = i.user_id
         INNER JOIN book b ON i.bookid = b.id
         WHERE u.id = ?
       `;
-    const values = [id];
+      const values = [id];
 
-    await db.query(query, values, (err, userData) => {
-      if (!userData) {
-        return res.status(404).render("error", { message: "User not found" });
-      }
+      await db.query(query, values, (err, userData) => {
+        if (!userData) {
+          return res.status(404).render("error", { message: "User not found" });
+        }
 
-      res.render("userDashboard", {
-        userData,
-        isLoggedIn,
-        moment,
-        user: req.user,
-        adminRequest: adminRequest,
+        res.render("userDashboard", {
+          userData,
+          isLoggedIn,
+          moment,
+          user: req.user,
+          adminRequest: req.adminRequest,
+        });
       });
-    });
-  } catch (error) {
-    res
-      .status(500)
-      .render("error", { message: "Error retrieving user profile" });
+    } catch (error) {
+      res
+        .status(500)
+        .render("error", { message: "Error retrieving user profile" });
+    }
   }
-});
+);
 
 route.get(
   "/admin/profile/",
@@ -147,7 +139,7 @@ route.get(
 
       await db.query(query, (error, results) => {
         res.render("adminDashboard", {
-          isLoggedIn,
+          isLoggedIn: req.isLoggedIn,
           moment,
           user: req.user,
           requestedReturns: results,

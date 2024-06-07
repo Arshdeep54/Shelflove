@@ -1,4 +1,3 @@
-const { isAuthenticated } = require("../utils/index");
 
 function isAdminMiddleware(req, res, next) {
   if (!req.user.isAdmin) {

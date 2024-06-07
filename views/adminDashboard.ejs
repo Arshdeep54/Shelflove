@@ -84,7 +84,6 @@
             <td>
               <input
                 type="checkbox"
-                checked="checked"
                 class="checkbox return-checkbox"
                 id="checkbox<%=returnRequest.issueId%>"
                 data-issue-id="<%= returnRequest.issueId %>"
@@ -250,7 +249,7 @@
         });
       });
 
-      const submitButton = document.getElementsByclass("approve-btn");
+      const submitButton = document.getElementsByClassName("approve-btn");
       submitButton[0].addEventListener("click", (event) => {
         event.preventDefault();
         if (selectedIssueIds.length === 0) {
@@ -289,7 +288,7 @@
         });
       });
       const submitAdminButton =
-        document.getElementsByclass("approve-admin-btn");
+        document.getElementsByClassName("approve-admin-btn");
 
       submitAdminButton[0].addEventListener("click", (event) => {
         event.preventDefault();

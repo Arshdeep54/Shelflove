@@ -74,7 +74,7 @@ router.post("/return/", async (req, res) => {
         .json({ message: "Book not found or already returned" });
     }
 
-    res.status(302).redirect("/user/profile");
+    res.redirect(`/books/${bookid}`);
   } catch (error) {
     res.status(500).render("error", { message: "Error returning book" });
   }

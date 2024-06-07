@@ -29,13 +29,24 @@
           name="user_id"
           value="<%= userId %>"
         />
-        <button
-          type="submit"
-          class="btn btn-secondary"
-          disabled="<%= returnRequest %>"
-        >
-          Return Request 
-        </button>
+        <% if(returnRequest ){ %>
+
+          <button
+            type="submit"
+            class="btn btn-secondary"
+            disabled
+          >
+            Return Requested
+          </button>
+     <%   }else {%>
+          <button
+            type="submit"
+            class="btn btn-secondary"
+            
+          >
+            Return Request
+          </button>
+      <%  }%>
       </form>
       <% } else { %>
       <form action="/api/user/issue/" method="post" id="issueForm">
@@ -91,28 +102,28 @@
       //       alert(error);
       //     });
       // });
-      const requestForm = document.getElementById("requestForm");
-      requestForm.addEventListener("submit", (event) => {
-        event.preventDefault(); // Prevent default form submission
-        const data = {
-          user_id: requestForm.elements.user_id.value,
-          bookid: requestForm.elements.bookid.value,
-        };
+      // const requestForm = document.getElementById("requestForm");
+      // requestForm.addEventListener("submit", (event) => {
+      //   event.preventDefault(); // Prevent default form submission
+      //   const data = {
+      //     user_id: requestForm.elements.user_id.value,
+      //     bookid: requestForm.elements.bookid.value,
+      //   };
 
-        const jsonData = JSON.stringify(data); // Convert to JSON string
+      //   const jsonData = JSON.stringify(data); // Convert to JSON string
 
-        fetch("/api/user/request", {
-          method: "POST",
-          body: jsonData,
-          headers: { "Content-Type": "application/json" },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-          })
-          .catch((error) => {
-            alert(error);
-          });
-      });
+      //   fetch("/api/user/request", {
+      //     method: "POST",
+      //     body: jsonData,
+      //     headers: { "Content-Type": "application/json" },
+      //   })
+      //     .then((response) => response.json())
+      //     .then((data) => {
+      //     })
+      //     .catch((error) => {
+      //       alert(error);
+      //     });
+      // });
     </script>
   </body>
 </html>

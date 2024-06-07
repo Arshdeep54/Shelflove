@@ -87,14 +87,21 @@
         <p class="text-xl p-4">Send Request to be admin</p>
 
         <form action="/api/user/adminrequest/" method="post">
+          <%if(adminRequest){%>
           <button
             type="submit"
             class="btn btn-accent"
-            disabled="<%=adminRequest%>"
+            disabled
             id="sendAdminRequest"
           >
-            <%= adminRequest ? "Already Sent": "Send" %>
+            Already Sent
           </button>
+          <% }else{%>
+
+          <button type="submit" class="btn btn-accent" id="sendAdminRequest">
+            Send
+          </button>
+          <% }%>
         </form>
       </div>
       <button class="btn btn-secondary mx-4" id="logout">Logout</button>

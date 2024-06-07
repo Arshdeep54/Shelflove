@@ -24,6 +24,8 @@ CREATE TABLE issue(
     bookid INT NOT NULL,
     issue_date DATE,
     return_date DATE,
+    isReturned BOOLEAN DEFAULT FALSE,
+    returnRequested BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (user_id) REFERENCES user(id), 
     FOREIGN KEY (bookid) REFERENCES book(id)
 );

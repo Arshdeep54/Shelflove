@@ -2,22 +2,21 @@ const db = require("../../config/dbconfig");
 const moment = require("moment");
 const router = require("express").Router();
 
-const { isBookAvailable } = require("../../utils/index");
 const isLoggedIn = require("../../middlewares/isLoggedIn");
+const isBookAvailable = require("../../middlewares/isBookAvailable");
 
-router.post("/issue/", async (req, res) => {
+router.post("/issue/:bookid", isBookAvailable, async (req, res) => {
   const { user_id, bookid } = req.body;
-
   if (!user_id || !bookid) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
   try {
-    const isAvailable = await isBookAvailable(bookid);
+    // const isAvailable = await isBookAvailable(bookid);
 
-    if (!isAvailable) {
-      return res.status(400).json({ message: "Book is not available" });
-    }
+    // if (!isAvailable) {
+      // return res.status(400).json({ message: "Book is not available" });
+    // }
 
     await db.query(
       `SELECT * FROM issue WHERE user_id = ? AND isReturned = FALSE`,
@@ -36,20 +35,20 @@ router.post("/issue/", async (req, res) => {
             INSERT INTO issue (user_id, bookid, issue_date, expected_return_date,issueRequested)
             VALUES (?, ?, ?, ?,?)
           `;
-        const values = [user_id, bookid, today, returnDate,true];
+        const values = [user_id, bookid, today, returnDate, true];
 
         await db.query(query, values, (error, result) => {
           if (error) {
             return res
               .status(500)
-              .render("error", { message: "Error issuing book" + error});
+              .render("error", { message: "Error issuing book" + error });
           }
           res.redirect(`/books/${bookid}`);
         });
       }
     );
   } catch (error) {
-    res.status(500).render("error", { message: "Error issuing book "+ error });
+    res.status(500).render("error", { message: "Error issuing book " + error });
   }
 });
 
@@ -110,7 +109,7 @@ router.post("/adminrequest/", isLoggedIn, async (req, res) => {
         .status(404)
         .json({ message: "Failed to send Request or Already sent" });
     }
-    res.status(302).redirect("/user/profile");
+    res.status(302).redirect("/user");
   });
 });
 router.get("/fav", async (req, res) => {});

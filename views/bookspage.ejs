@@ -35,8 +35,8 @@
       <tbody>
         <% for (const book of books) { %>
         <tr>
-          <td><%= book.id %></td>
-          <td><a href="/books/<%= book.id %>"><%= book.title%></a></td>
+          <td><%= books.indexOf(book)+1 %></td>
+          <td><a href="/books/<%= book.id %>" class="text text-white"><%= book.title%></a></td>
           <td><%= book.author %></td>
           <td><%= book.rating %></td>
           <td><%= book.quantity %></td>

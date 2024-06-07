@@ -74,7 +74,7 @@ route.get("/books/:id", isLoggedIn, existingIssue, async (req, res) => {
   }
 });
 route.get(
-  "/user/profile/",
+  "/user",
   isLoggedIn,
   isAdminRequestSent,
   async (req, res) => {
@@ -114,7 +114,7 @@ route.get(
 );
 
 route.get(
-  "/admin/profile/",
+  "/admin",
   isLoggedIn,
   isAdminMiddleware,
   async (req, res) => {

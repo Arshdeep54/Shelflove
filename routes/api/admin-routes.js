@@ -164,21 +164,29 @@ router.post("/approveissues/", async (req, res) => {
   }
 
   try {
-    const updateQuery = `UPDATE book SET quantity=quantity * ? where id= ? `;
+    // selectedIssebooks : key value pair bookId => count by which quantity must be decreased
+    let updateQuery = `UPDATE book SET quantity= (CASE `;
     for (const key in selectedIssuebooks) {
-      const element = selectedIssuebooks[key];
-      const values = [element, parseInt(key)];
-     
-      if (element > 0) {
-       
-        const result = await db.query(updateQuery, values);
+      updateQuery += `WHEN id= ${parseInt(key)} THEN quantity - ${
+        selectedIssuebooks[key]
+      } `;
+    }
+    updateQuery += `ELSE (quantity) END ) WHERE id IN (?) `;
+    await db.query(
+      updateQuery,
+      [Object.keys(selectedIssuebooks)],
+      (err, result) => {
+        if (!result) {
+          throw err;
+        }
         if (result.affectedRows === 0) {
           return res
             .status(404)
             .json({ message: "No issues found for approval" });
         }
       }
-    }
+    );
+
     const query = `
       UPDATE issue
       SET issueRequested = FALSE, isReturned = FALSE
@@ -190,8 +198,8 @@ router.post("/approveissues/", async (req, res) => {
           .status(404)
           .json({ message: "No issues found for approval" });
       }
-      return res.redirect("/admin/profile");
     });
+    return res.redirect('/admin');
   } catch (error) {
     res
       .status(500)
@@ -200,25 +208,46 @@ router.post("/approveissues/", async (req, res) => {
 });
 
 router.post("/approve/", async (req, res) => {
-  const { issueIds } = req.body;
+  const { issueIds, selectedReturnbooks } = req.body;
   if (!issueIds || !Array.isArray(issueIds) || issueIds.length === 0) {
     return res.status(400).json({ message: "Invalid request body" });
   }
 
-  const query = `
-    UPDATE issue
-    SET returnRequested = FALSE, isReturned = TRUE
-    WHERE id IN (?)
-  `;
-
   try {
+    let updateQuery = `UPDATE book SET quantity= (CASE `;
+    for (const key in selectedReturnbooks) {
+      updateQuery += `WHEN id= ${parseInt(key)} THEN quantity + ${
+        selectedReturnbooks[key]
+      } `;
+    }
+    updateQuery += `ELSE (quantity) END ) WHERE id IN (?) `;
+    await db.query(
+      updateQuery,
+      [Object.keys(selectedReturnbooks)],
+      (err, result) => {
+        if (!result) {
+          throw err;
+        }
+        if (result.affectedRows === 0) {
+          return res
+            .status(404)
+            .json({ message: "No issues found for approval" });
+        }
+      }
+    );
+    const query = `
+      UPDATE issue
+      SET returnRequested = FALSE, isReturned = TRUE
+      WHERE id IN (?)
+    `;
     await db.query(query, [issueIds], (err, result) => {
+
       if (result.affectedRows === 0) {
         return res
           .status(404)
           .json({ message: "No issues found for approval" });
       }
-      return res.redirect("/admin/profile");
+      return res.redirect("/admin");
     });
   } catch (error) {
     res.status(500).render("error", { message: "Error approving returns" });

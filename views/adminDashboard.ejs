@@ -75,7 +75,9 @@
                 </svg>
               </a>
             </td>
-            <td><%= returnRequest.author %><%=returnRequest.returnRequested%></td>
+            <td>
+              <%= returnRequest.author %><%=returnRequest.returnRequested%>
+            </td>
             <td>
               <%= moment(returnRequest.issue_date).format('YYYY-MM-DD') %>
             </td>
@@ -89,6 +91,7 @@
                 class="checkbox return-checkbox"
                 id="checkbox<%=returnRequest.issueId%>"
                 data-issue-id="<%= returnRequest.issueId %>"
+                data-book-id="<%= returnRequest.bookId %>"
               />
             </td>
           </tr>
@@ -339,11 +342,17 @@
     <script>
       const returnCheckboxes = document.querySelectorAll(".return-checkbox");
       const selectedIssueIds = [];
+      const selectedReturnbooks = {};
 
       returnCheckboxes.forEach((checkbox) => {
         checkbox.addEventListener("change", (event) => {
           if (event.target.checked) {
             selectedIssueIds.push(event.target.dataset.issueId);
+            if (!selectedReturnbooks[event.target.dataset.bookId]) {
+              selectedReturnbooks[event.target.dataset.bookId] = 1;
+            } else {
+              selectedReturnbooks[event.target.dataset.bookId]++;
+            }
           } else {
             const index = selectedIssueIds.indexOf(
               event.target.dataset.issueId
@@ -351,6 +360,7 @@
             if (index > -1) {
               selectedIssueIds.splice(index, 1);
             }
+            selectedReturnbooks[event.target.dataset.bookId]--;
           }
         });
       });
@@ -363,16 +373,20 @@
           return;
         }
 
-        const requestBody = JSON.stringify({ issueIds: selectedIssueIds });
+        const requestBody = JSON.stringify({
+          issueIds: selectedIssueIds,
+          selectedReturnbooks,
+        });
 
         fetch("/api/admin/approve", {
           method: "POST",
           body: requestBody,
           headers: { "Content-Type": "application/json" },
         })
-          .then((response) => response.json())
-          .then((data) => {
+        .then((response) => {
             selectedIssueIds.length = 0;
+            selectedReturnbooks = {};
+            location.reload();
           });
       });
     </script>
@@ -385,7 +399,6 @@
       issueCheckboxes.forEach((checkbox) => {
         checkbox.addEventListener("change", (event) => {
           if (event.target.checked) {
-          
             selectedIssueReqIds.push(event.target.dataset.issueId);
             if (!selectedIssuebooks[event.target.dataset.bookId]) {
               selectedIssuebooks[event.target.dataset.bookId] = 1;
@@ -422,10 +435,10 @@
           body: requestBody,
           headers: { "Content-Type": "application/json" },
         })
-          .then((response) => response.json())
-          .then((data) => {
+          .then((response) => {
             selectedIssueReqIds.length = 0;
             selectedIssuebooks = {};
+            location.reload();
           });
       });
     </script>

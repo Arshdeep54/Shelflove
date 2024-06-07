@@ -33,29 +33,28 @@ router.post("/issue/", async (req, res) => {
         const returnDate = moment(today).add(14, "days").format("YYYY-MM-DD");
 
         const query = `
-            INSERT INTO issue (user_id, bookid, issue_date, return_date)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO issue (user_id, bookid, issue_date, expected_return_date,issueRequested)
+            VALUES (?, ?, ?, ?,?)
           `;
-        const values = [user_id, bookid, today, returnDate];
+        const values = [user_id, bookid, today, returnDate,true];
 
         await db.query(query, values, (error, result) => {
           if (error) {
             return res
               .status(500)
-              .render("error", { message: "Error issuing book" });
+              .render("error", { message: "Error issuing book" + error});
           }
           res.redirect(`/books/${bookid}`);
         });
       }
     );
   } catch (error) {
-    res.status(500).render("error", { message: "Error issuing book" });
+    res.status(500).render("error", { message: "Error issuing book "+ error });
   }
 });
 
 router.post("/return/", async (req, res) => {
   const { user_id, bookid } = req.body;
-
   if (!user_id || !bookid) {
     return res.status(400).json({ message: "Missing required fields" });
   }
@@ -64,7 +63,7 @@ router.post("/return/", async (req, res) => {
     const query = `
         UPDATE issue
         SET returnRequested = true
-        WHERE user_id = ? AND bookid = ?
+        WHERE user_id = ? AND bookid = ? AND isReturned=0
       `;
     const values = [user_id, bookid];
     const result = await db.query(query, values);

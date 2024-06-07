@@ -22,21 +22,28 @@
     <table class="table table-striped">
       <thead>
         <tr class="text text-blue-500 text-lg">
+          <th>S.no</th>
           <th>Title</th>
           <th>Author</th>
           <th>Rating</th>
           <th>quantity</th>
+          <th>genre</th>
           <th>description</th>
+          <th>Address</th>
         </tr>
       </thead>
       <tbody>
         <% for (const book of books) { %>
         <tr>
-          <td><a href="/books/<%= book.id %>"><%= book.name %></a></td>
+          <td><%= book.id %></td>
+          <td><a href="/books/<%= book.id %>"><%= book.title%></a></td>
           <td><%= book.author %></td>
           <td><%= book.rating %></td>
           <td><%= book.quantity %></td>
+          <td><%= book.genre %></td>
+
           <td><%= book.description %></td>
+          <td><%= book.address %></td>
         </tr>
         <% } %>
       </tbody>

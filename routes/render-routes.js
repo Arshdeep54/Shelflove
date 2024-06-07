@@ -13,8 +13,9 @@ route.get("/", isLoggedIn, (req, res) => {
   const isLoggedIn = req.isLoggedIn;
   res.render("home", {
     isLoggedIn,
+    userId: req.userId,
+    isAdmin: req.isAdmin,
     user: req.user,
-    url: req.protocol + "://" + req.headers.host,
   });
 });
 
@@ -26,6 +27,8 @@ route.get("/books", isLoggedIn, async (req, res) => {
     await db.query(query, (error, result) => {
       res.render("bookspage", {
         isLoggedIn,
+        userId: req.userId,
+        isAdmin: req.isAdmin,
         user: req.user,
         books: result,
       });
@@ -53,10 +56,13 @@ route.get("/books/:id", isLoggedIn, existingIssue, async (req, res) => {
 
       const book = result[0];
       res.render("bookdetail", {
+        moment,
         isLoggedIn,
         userId: req.userId,
+        isAdmin: req.isAdmin,
         user: req.user,
         book: book,
+        issueRequested: req.issueRequested,
         issuedByuser: req.isIssued,
         returnRequest: req.isRequested,
       });
@@ -76,7 +82,7 @@ route.get(
     const isLoggedIn = req.isLoggedIn;
     try {
       const query = `
-        SELECT u.username, u.email, i.id AS issueId, i.bookid,i.issue_date, i.return_date, b.name, b.author,i.isReturned
+        SELECT u.username, u.email, i.id AS issueId, i.bookid,i.issue_date, i.expected_return_date, b.title, b.author,i.isReturned,i.issueRequested,i.returnRequested
         FROM user u
         INNER JOIN issue i ON u.id = i.user_id
         INNER JOIN book b ON i.bookid = b.id
@@ -91,8 +97,10 @@ route.get(
 
         res.render("userDashboard", {
           userData,
-          isLoggedIn,
           moment,
+          isLoggedIn,
+          userId: req.userId,
+          isAdmin: req.isAdmin,
           user: req.user,
           adminRequest: req.adminRequest,
         });
@@ -130,19 +138,32 @@ route.get(
       );
 
       const query = `
-        SELECT i.id AS issueId, u.username, b.name AS bookTitle,b.author, i.issue_date, i.return_date, i.returnRequested
+        SELECT i.id AS issueId, u.username,b.id AS bookId, b.title AS bookTitle,b.author, i.issue_date, i.expected_return_date, i.returnRequested ,i.issueRequested
         FROM issue i
         INNER JOIN user u ON u.id = i.user_id
         INNER JOIN book b ON b.id = i.bookid
-        WHERE returnRequested = 1
+        WHERE returnRequested = 1 or issueRequested = 1
       `;
 
       await db.query(query, (error, results) => {
+        
+        if (error) {
+          return res.render("error", { message: error });
+        }
+        const requestedReturns = results.filter(
+          (result) => result.returnRequested === 1
+        );
+        const requestedIssues = results.filter(
+          (result) => result.issueRequested === 1
+        );
         res.render("adminDashboard", {
-          isLoggedIn: req.isLoggedIn,
           moment,
+          isLoggedIn: req.isLoggedIn,
+          userId: req.userId,
+          isAdmin: req.isAdmin,
           user: req.user,
-          requestedReturns: results,
+          requestedReturns,
+          requestedIssues,
           requestedAdmins,
         });
       });
@@ -153,19 +174,16 @@ route.get(
     }
   }
 );
-route.get("/login", isLoggedIn, (req, res) => {
-  const isLoggedIn = req.isLoggedIn;
+route.get("/login", (req, res) => {
   res.render("login", {
-    isLoggedIn,
-    user: req.user,
+    isLoggedIn: false,
     errorMessage: null,
   });
 });
-route.get("/signup", isLoggedIn, (req, res) => {
+route.get("/signup", (req, res) => {
   const isLoggedIn = req.isLoggedIn;
   res.render("signup", {
-    isLoggedIn,
-    user: req.user,
+    isLoggedIn: false,
     errorMessage: null,
   });
 });

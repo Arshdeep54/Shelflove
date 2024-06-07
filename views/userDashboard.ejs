@@ -18,9 +18,8 @@
     <div class="mx-5 my-5">
       <h1 class="text text-xl font-bold">User Profile</h1>
       <h2 class="text text-lg text-primary mb-5">
-        <%= userData[0].username %> ( <%= userData[0].email %> )
+        <%=user.name %> ( <%= user.email %> )
       </h2>
-
       <% if (userData.length > 0) { %>
       <h3 class="text text-slate-400 text-2xl">Issued Books</h3>
       <table class="table table-striped">
@@ -31,7 +30,10 @@
             <th>Author</th>
             <th>Issued Date</th>
             <th>Return Date</th>
+            <th>Issued</th>
             <th>Returned</th>
+            <th>Issue Requested</th>
+            <th>Return Requested</th>
           </tr>
         </thead>
         <tbody>
@@ -39,7 +41,7 @@
           <tr>
             <td><%= issue.issueId %></td>
             <td class="flex flex-row gap-2">
-              <%= issue.name %>
+              <%= issue.title %>
               <a href="/books/<%= issue.bookid %>">
                 <svg
                   class="cursor-pointer"
@@ -72,8 +74,11 @@
             </td>
             <td><%= issue.author %></td>
             <td><%= moment(issue.issue_date).format('YYYY-MM-DD') %></td>
-            <td><%= moment(issue.return_date).format('YYYY-MM-DD') %></td>
+            <td><%= moment(issue.expected_return_date).format('YYYY-MM-DD') %></td>
+            <td><%= !issue.issueRequested==0?"No":"Yes" %></td>
             <td><%= issue.isReturned==0?"No":"Yes" %></td>
+            <td><%= issue.issueRequested==0?"No":"Yes" %></td>
+            <td><%= issue.returnRequested==0?"No":"Yes" %></td>
           </tr>
 
           <% } %>

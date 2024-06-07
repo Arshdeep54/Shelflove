@@ -1,6 +1,8 @@
+const isLoggedIn = require("./isLoggedIn");
 
 function isAdminMiddleware(req, res, next) {
-  if (!req.user.isAdmin) {
+
+  if (!req.isAdmin) {
     return res
       .status(403)
       .json({ message: "Unauthorized: Access restricted to admins" });

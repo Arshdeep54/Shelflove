@@ -4,23 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shelflove</title>
-    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
-    <!-- <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script> -->
     <link type="text/css" href="/css/style.css" rel="stylesheet" />
-    <!-- <link
+    <link
       href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css"
       rel="stylesheet"
       type="text/css"
-    /> -->
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body>
     <%- include('./components/navbar.ejs') %>
-    <div class="mx-5 my-5">
-      <h1 class="text m-1 font-bold"><%= book.name %></h1>
+    <section>
+      <div class="mx-5 my-5 "">
+      <h1 class="text m-1 font-bold"><%= book.title %></h1>
       <p class="text m-1 font-bold">By: <%= book.author %></p>
 
-      <% if (isLoggedIn) { if(!user.isAdmin){if( issuedByuser){ %>
-      <button type="submit" class="btn btn-secondary" disabled>Issued</button>
+      <% if (isLoggedIn) { if(!user.isAdmin){if( issueRequested ||
+      issuedByuser){ %>
+
+      <button type="submit" class="btn btn-secondary" disabled>
+        <%= issueRequested? "Issue Requested" : "Issued"%>
+      </button>
+
       <form action="/api/user/return/" method="post" id="requestForm">
         <input type="hidden" id="bookid" name="bookid" value="<%= book.id %>" />
         <input
@@ -31,22 +36,18 @@
         />
         <% if(returnRequest ){ %>
 
-          <button
-            type="submit"
-            class="btn btn-secondary"
-            disabled
-          >
-            Return Requested
-          </button>
-     <%   }else {%>
-          <button
-            type="submit"
-            class="btn btn-secondary"
-            
-          >
-            Return Request
-          </button>
-      <%  }%>
+        <button type="submit" class="btn btn-secondary" disabled>
+          Return Requested
+        </button>
+        <% }else { if(issueRequested){%>
+        <button type="submit" class="btn btn-secondary" disabled>
+          Return Request
+        </button>
+
+       <%}else{%>
+
+        <button type="submit" class="btn btn-secondary">Return Request</button>
+         <%} }%>
       </form>
       <% } else { %>
       <form action="/api/user/issue/" method="post" id="issueForm">
@@ -57,7 +58,7 @@
           name="user_id"
           value="<%= userId %>"
         />
-        <button type="submit" class="btn btn-secondary">Issue Book </button>
+        <button type="submit" class="btn btn-secondary">Issue Book</button>
       </form>
       <% }}} else { %>
       <p>Please log in to issue a book.</p>
@@ -68,62 +69,186 @@
         </p>
         <p>
           <span class="text-primary">Publication Date:</span> <%=
-          book.publication_date %>
+          moment(book.publication_date).format("MMM Do YYYY") %>
         </p>
         <p><span class="text-primary">Rating: </span><%= book.rating %></p>
         <p><span class="text-primary">Quantity:</span> <%= book.quantity %></p>
       </div>
-    </div>
+    </section>
     <% if(user.isAdmin) {%>
-    <form action="/api/admin/deletebook/<%=book.id%>" method="post">
-      <button class="btn btn-primary" type="submit">Delete book</button>
-    </form>
+
+    <button
+      class="btn btn-primary"
+      type="submit"
+      onclick="DeleteModal.showModal()"
+    >
+      Delete book
+    </button>
+    <dialog id="DeleteModal" class="modal">
+      <form
+        action="/api/admin/deletebook/<%=book.id%>"
+        method="post"
+        id="deletebookForm"
+      ></form>
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Delete Book</h3>
+        <p class="py-4">
+          Are you sure you want to Delete the book (<%=book.title%>)
+        </p>
+        <form method="dialog">
+          <div class="flex flex-row-reverse">
+            <button class="btn mx-3" id="deletebook">Confirm</button>
+            <button class="btn mx-3">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+    <button
+      class="btn btn-primary"
+      type="submit"
+      onclick="UpdateModal.showModal()"
+    >
+      Update book
+    </button>
+    <dialog id="UpdateModal" class="modal">
+      <div class="modal-box w-11/12 max-w-5xl">
+        <form method="dialog">
+          <button
+            class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+          >
+            ✕
+          </button>
+        </form>
+        <h3 class="font-bold text-lg">Update book</h3>
+        <div class="divider divider-accent"></div>
+        <form
+          action="/api/admin/updatebook/<%=book.id%>"
+          method="post"
+          id="updatebookForm"
+        >
+          <div class="flex flex-row w-full gap-16 align-center items-center">
+            <div>
+              <label class="text-xl" for="title">Title</label>
+              <input
+                type="text"
+                name="title"
+                value="<%=book.title%>"
+                class="input input-bordered w-full max-w-xs my-3 mx-3"
+                placeholder="Enter book title"
+              />
+            </div>
+            <div>
+              <label class="text-xl" for="author">Author</label>
+              <input
+                type="text"
+                name="author"
+                value="<%=book.author%>"
+                class="input input-bordered w-full max-w-xs my-3 mx-3"
+                placeholder="Enter book Author"
+              />
+            </div>
+          </div>
+          <div class="flex flex-row w-full gap-16 align-center items-center">
+            <div class="flex flex-col">
+              <label class="text-xl mt-5" for="description">Description</label>
+              <textarea
+                class="textarea textarea-bordered textarea-lg mx-3 resize-none max-w-xs border-solid outline-none rounded-xl my-3"
+                name="description"
+                placeholder="Enter the book description"
+              >
+ <%=book.description%></textarea
+              >
+            </div>
+            <div class="ml-8">
+              <label class="text-xl" for="publication_date"
+                >Publication Date:</label
+              >
+              <input type="date" name="publication_date" class="input
+              outline-none focus:outline-none my-3 mx-3" id="publication_date"
+              <%= moment(book.publication_date).format("MMM Do YYYY") %> />
+            </div>
+          </div>
+          <div class="flex flex-row w-full gap-16 align-center items-center">
+            <div>
+              <label class="text-xl" for="quantity">Quantity</label>
+              <input
+                type="number"
+                name="quantity"
+                value="<%=book.quantity%>"
+                class="input input-bordered w-full max-w-xs my-3 mx-3"
+                placeholder="Enter how many books to enter"
+              />
+            </div>
+            <div>
+              <label class="text-xl" for="rating">Rating</label>
+              <input
+                type="number"
+                name="rating"
+                value="<%=book.rating%>"
+                class="input input-bordered w-full max-w-xs my-3 mx-3"
+                placeholder="Enter the rating of the book"
+              />
+            </div>
+          </div>
+          <div>
+            <div>
+              <label class="text-xl" for="address">Address</label>
+              <input
+                type="text"
+                name="address"
+                value="<%=book.address%>"
+                class="input input-bordered w-full max-w-xs my-3 mx-3"
+                placeholder="Enter book address"
+              />
+            </div>
+            <div>
+              <label class="text-xl" for="genre">Genre</label>
+              <select
+                class="select select-bordered w-full max-w-xs"
+                name="genre"
+              >
+                <option selected>Fantasy</option>
+                <option>Drama</option>
+                <option>Comedy</option>
+                <option>Physics</option>
+                <option>Literature</option>
+              </select>
+            </div>
+          </div>
+        </form>
+
+        <div class="modal-action">
+          <form method="dialog">
+            <button
+              class="btn btn-primary addbook"
+              type="submit"
+              id="updatebook"
+            >
+              Update
+            </button>
+          </form>
+        </div>
+      </div>
+    </dialog>
     <%}%>
+
     <script>
-      // const issueForm = document.getElementById("issueForm");
-      // issueForm.addEventListener("submit", (event) => {
-      //   event.preventDefault(); // Prevent default form submission
-      //   const data = {
-      //     user_id: issueForm.elements.user_id.value,
-      //     bookid: issueForm.elements.bookid.value,
-      //   };
+      const deleteBookButton = document.getElementById("deletebook");
+      const deletebookForm = document.getElementById("deletebookForm");
+      deleteBookButton.addEventListener("click", () => {
+       
+        deletebookForm.submit();
+      });
+    </script>
+    <script>
+      const today = new Date().toISOString().slice(0, 10);
+      document.getElementById("publication_date").value = today;
+      const updateBookButton = document.getElementById("updatebook");
+      const updatebookForm = document.getElementById("updatebookForm");
 
-      //   const jsonData = JSON.stringify(data); // Convert to JSON string
-
-      //   fetch("/api/user/issue", {
-      //     method: "POST",
-      //     body: jsonData,
-      //     headers: { "Content-Type": "application/json" },
-      //   })
-      //     .then((response) => response.json())
-      //     .then((data) => {
-      //     })
-      //     .catch((error) => {
-      //       alert(error);
-      //     });
-      // });
-      // const requestForm = document.getElementById("requestForm");
-      // requestForm.addEventListener("submit", (event) => {
-      //   event.preventDefault(); // Prevent default form submission
-      //   const data = {
-      //     user_id: requestForm.elements.user_id.value,
-      //     bookid: requestForm.elements.bookid.value,
-      //   };
-
-      //   const jsonData = JSON.stringify(data); // Convert to JSON string
-
-      //   fetch("/api/user/request", {
-      //     method: "POST",
-      //     body: jsonData,
-      //     headers: { "Content-Type": "application/json" },
-      //   })
-      //     .then((response) => response.json())
-      //     .then((data) => {
-      //     })
-      //     .catch((error) => {
-      //       alert(error);
-      //     });
-      // });
+      updateBookButton.addEventListener("click", () => {
+        updatebookForm.submit();
+      });
     </script>
   </body>
 </html>

@@ -4,8 +4,16 @@ const isLoggedIn = require("../../middlewares/isLoggedIn");
 const router = require("express").Router();
 
 router.post("/addbook", async (req, res) => {
-  const { title, author, description, quantity, publication_date, rating } =
-    req.body;
+  const {
+    title,
+    author,
+    description,
+    quantity,
+    publication_date,
+    rating,
+    address,
+    genre,
+  } = req.body;
 
   if (
     !title ||
@@ -13,23 +21,27 @@ router.post("/addbook", async (req, res) => {
     !description ||
     !quantity ||
     !publication_date ||
-    !rating
+    !rating ||
+    !address ||
+    !genre
   ) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
   try {
     const query = `
-        INSERT INTO book ( name, author, description, quantity ,publication_date,rating)
-        VALUES (?, ?, ?, ?,?,?)
+        INSERT INTO book ( title, author, description, quantity ,genre,publication_date,rating, address)
+        VALUES (?, ?, ?, ?,?,?,?,?)
       `;
     const values = [
       title,
       author,
       description,
       quantity,
+      genre,
       publication_date,
       rating,
+      address,
     ];
 
     db.query(query, values, (error, result) => {
@@ -46,8 +58,16 @@ router.post("/addbook", async (req, res) => {
 });
 router.post("/updatebook/:id", async (req, res) => {
   const { id } = req.params;
-  const { title, author, description, quantity, publication_date, rating } =
-    req.body;
+  const {
+    title,
+    author,
+    description,
+    quantity,
+    publication_date,
+    rating,
+    genre,
+    address,
+  } = req.body;
 
   if (
     !id ||
@@ -56,7 +76,9 @@ router.post("/updatebook/:id", async (req, res) => {
       !description &&
       !quantity &&
       !publication_date &&
-      !rating)
+      !rating &&
+      !genre &&
+      !address)
   ) {
     return res
       .status(400)
@@ -65,13 +87,15 @@ router.post("/updatebook/:id", async (req, res) => {
 
   try {
     const query = `
-        UPDATE books
+        UPDATE book
         SET title = COALESCE(?, title),
             author = COALESCE(?, author),
             description = COALESCE(?, description),
             quantity = COALESCE(?, quantity),
             publication_date = COALESCE(?, publication_date),
-            rating = COALESCE(?, rating)
+            rating = COALESCE(?, rating),
+            genre = COALESCE(?, genre),
+            address = COALESCE(?, address)
         WHERE id = ?
       `;
 
@@ -82,16 +106,17 @@ router.post("/updatebook/:id", async (req, res) => {
       quantity,
       publication_date,
       rating,
+      genre,
+      address,
       id,
     ];
 
     const result = await db.query(query, values);
-
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Book not found" });
     }
 
-    res.status(200).json({ message: "Book updated successfully" });
+    res.redirect(`/books/${id}`);
   } catch (error) {
     res.status(500).render("error", { message: "Error updating book" });
   }
@@ -131,6 +156,49 @@ router.get("/bookissues/", async (req, res) => {
       .render("error", { message: "Error retrieving book issues" });
   }
 });
+
+router.post("/approveissues/", async (req, res) => {
+  const { issueIds, selectedIssuebooks } = req.body;
+  if (!issueIds || !Array.isArray(issueIds) || issueIds.length === 0) {
+    return res.status(400).json({ message: "Invalid request body" });
+  }
+
+  try {
+    const updateQuery = `UPDATE book SET quantity=quantity * ? where id= ? `;
+    for (const key in selectedIssuebooks) {
+      const element = selectedIssuebooks[key];
+      const values = [element, parseInt(key)];
+     
+      if (element > 0) {
+       
+        const result = await db.query(updateQuery, values);
+        if (result.affectedRows === 0) {
+          return res
+            .status(404)
+            .json({ message: "No issues found for approval" });
+        }
+      }
+    }
+    const query = `
+      UPDATE issue
+      SET issueRequested = FALSE, isReturned = FALSE
+      WHERE id IN (?)
+    `;
+    await db.query(query, [issueIds], (err, result) => {
+      if (result.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ message: "No issues found for approval" });
+      }
+      return res.redirect("/admin/profile");
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .render("error", { message: "Error approving Issue Requests" });
+  }
+});
+
 router.post("/approve/", async (req, res) => {
   const { issueIds } = req.body;
   if (!issueIds || !Array.isArray(issueIds) || issueIds.length === 0) {
@@ -144,11 +212,14 @@ router.post("/approve/", async (req, res) => {
   `;
 
   try {
-    const result = await db.query(query, [issueIds]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "No returns found for approval" });
-    }
-    res.render("adminDashboard",{isLoggedIn:req.isLoggedIn,})
+    await db.query(query, [issueIds], (err, result) => {
+      if (result.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ message: "No issues found for approval" });
+      }
+      return res.redirect("/admin/profile");
+    });
   } catch (error) {
     res.status(500).render("error", { message: "Error approving returns" });
   }

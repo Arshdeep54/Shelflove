@@ -18,7 +18,7 @@
       <% } else { %>
       <div class="flex flex-row w-max align-center">
         <a
-          href="<%- user.isAdmin ? '/admin/profile' : '/user/profile' %>"
+          href="<%- isAdmin ? '/admin/profile' : '/user/profile' %>"
           class="mx-4"
         >
           <button type="input" class="btn btn-primary" id="user-menu-button">

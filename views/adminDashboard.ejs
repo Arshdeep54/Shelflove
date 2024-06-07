@@ -19,7 +19,9 @@
     <%- include('./components/navbar.ejs') %>
     <div class="mx-5 my-5">
       <h1 class="text text-xl font-bold">Admin dashboard</h1>
-
+      <h2 class="text text-lg text-primary mb-5">
+        <%= user.name %> ( <%= user.email %> )
+      </h2>
       <% if (requestedReturns.length > 0) { %>
       <div class="flex flex-row justify-between">
         <h3 class="text text-slate-400 text-2xl">Requested returns</h3>
@@ -73,7 +75,7 @@
                 </svg>
               </a>
             </td>
-            <td><%= returnRequest.author %></td>
+            <td><%= returnRequest.author %><%=returnRequest.returnRequested%></td>
             <td>
               <%= moment(returnRequest.issue_date).format('YYYY-MM-DD') %>
             </td>
@@ -96,9 +98,84 @@
       </table>
       <% } else { %>
       <p>No new Requests</p>
+      <% } %> <% if (requestedIssues.length > 0) { %>
+      <div class="divider"></div>
+      <div class="flex flex-row justify-between">
+        <h3 class="text text-slate-400 text-2xl">Requested issues</h3>
+        <button class="btn btn-accent approve-issue-btn">
+          Approve Selected
+        </button>
+      </div>
+      <table class="table table-striped">
+        <thead>
+          <tr class="text text-blue-500 text-lg">
+            <th>Issue ID</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Issued Date</th>
+            <th>Return Date</th>
+            <th>Requested Issue</th>
+            <th>Select to approve</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const issueRequest of requestedIssues) { %>
+          <tr>
+            <td><%= issueRequest.issueId %></td>
+            <td class="flex flex-row gap-2">
+              <%= issueRequest.bookTitle %>
+              <a href="/books/<%= issueRequest.bookId %>">
+                <svg
+                  class="cursor-pointer"
+                  width="26px"
+                  height="26px"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                  <g
+                    id="SVGRepo_tracerCarrier"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  ></g>
+                  <g id="SVGRepo_iconCarrier">
+                    <g id="Interface / External_Link">
+                      <path
+                        id="Vector"
+                        d="M10.0002 5H8.2002C7.08009 5 6.51962 5 6.0918 5.21799C5.71547 5.40973 5.40973 5.71547 5.21799 6.0918C5 6.51962 5 7.08009 5 8.2002V15.8002C5 16.9203 5 17.4801 5.21799 17.9079C5.40973 18.2842 5.71547 18.5905 6.0918 18.7822C6.5192 19 7.07899 19 8.19691 19H15.8031C16.921 19 17.48 19 17.9074 18.7822C18.2837 18.5905 18.5905 18.2839 18.7822 17.9076C19 17.4802 19 16.921 19 15.8031V14M20 9V4M20 4H15M20 4L13 11"
+                        stroke="#000000"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      ></path>
+                    </g>
+                  </g>
+                </svg>
+              </a>
+            </td>
+            <td><%= issueRequest.author %></td>
+            <td><%= moment(issueRequest.issue_date).format('YYYY-MM-DD') %></td>
+            <td>
+              <%= moment(issueRequest.expected_return_date).format('YYYY-MM-DD')
+              %>
+            </td>
+            <td><%= issueRequest.issueRequested==0?"No":"Yes" %></td>
+            <td>
+              <input
+                type="checkbox"
+                class="checkbox issue-checkbox"
+                id="checkbox<%=issueRequest.issueId%>"
+                data-issue-id="<%= issueRequest.issueId%>"
+                data-book-id="<%= issueRequest.bookId %>"
+              />
+            </td>
+          </tr>
 
-      <% } %>
-
+          <% } %>
+        </tbody>
+      </table>
+      <% }%>
       <br />
       <div class="divider"></div>
       <% if (requestedAdmins.length > 0) { %>
@@ -163,60 +240,89 @@
         <h3 class="font-bold text-lg">Add New book</h3>
         <div class="divider divider-accent"></div>
         <form action="/api/admin/addbook/" method="post" id="addnewbookForm">
-          <div>
-            <label class="text-xl" for="title">Title</label>
-            <input
-              type="text"
-              name="title"
-              class="input input-bordered w-full max-w-xs my-3 mx-3"
-              placeholder="Enter book title"
-            />
+          <div class="flex flex-row w-full gap-16 align-center items-center">
+            <div>
+              <label class="text-xl" for="title">Title</label>
+              <input
+                type="text"
+                name="title"
+                class="input input-bordered w-full max-w-xs my-3 mx-3"
+                placeholder="Enter book title"
+              />
+            </div>
+            <div>
+              <label class="text-xl" for="author">Author</label>
+              <input
+                type="text"
+                name="author"
+                class="input input-bordered w-full max-w-xs my-3 mx-3"
+                placeholder="Enter book Author"
+              />
+            </div>
+          </div>
+          <div class="flex flex-row w-full gap-16 align-center items-center">
+            <div class="flex flex-col">
+              <label class="text-xl mt-5" for="description">Description</label>
+              <textarea
+                class="textarea textarea-bordered textarea-lg mx-3 resize-none max-w-xs border-solid outline-none rounded-xl my-3"
+                name="description"
+                placeholder="Enter the book description"
+              ></textarea>
+            </div>
+            <div class="ml-8">
+              <label class="text-xl" for="publication_date"
+                >Publication Date:</label
+              >
+              <input
+                type="date"
+                name="publication_date"
+                class="input outline-none focus:outline-none my-3 mx-3"
+              />
+            </div>
+          </div>
+          <div class="flex flex-row w-full gap-16 align-center items-center">
+            <div>
+              <label class="text-xl" for="quantity">Quantity</label>
+              <input
+                type="number"
+                name="quantity"
+                class="input input-bordered w-full max-w-xs my-3 mx-3"
+                placeholder="Enter how many books to enter"
+              />
+            </div>
+            <div>
+              <label class="text-xl" for="rating">Rating</label>
+              <input
+                type="number"
+                name="rating"
+                class="input input-bordered w-full max-w-xs my-3 mx-3"
+                placeholder="Enter the rating of the book"
+              />
+            </div>
           </div>
           <div>
-            <label class="text-xl" for="author">Author</label>
-            <input
-              type="text"
-              name="author"
-              class="input input-bordered w-full max-w-xs my-3 mx-3"
-              placeholder="Enter book Author"
-            />
-          </div>
-          <div class="flex flex-row items-start">
-            <label class="text-xl mt-5" for="description">Description</label>
-
-            <textarea
-              class="textarea textarea-bordered textarea-lg mx-3 resize-none border-solid outline-none rounded-xl my-3"
-              name="description"
-              placeholder="Enter the book description"
-            ></textarea>
-          </div>
-          <div>
-            <label class="text-xl" for="quantity">Quantity</label>
-            <input
-              type="number"
-              name="quantity"
-              class="input input-bordered w-full max-w-xs my-3 mx-3"
-              placeholder="Enter how many books to enter"
-            />
-          </div>
-          <div>
-            <label class="text-xl" for="rating">Rating</label>
-            <input
-              type="number"
-              name="rating"
-              class="input input-bordered w-full max-w-xs my-3 mx-3"
-              placeholder="Enter the rating of the book"
-            />
-          </div>
-          <div>
-            <label class="text-xl" for="publication_date"
-              >Publication Date:</label
-            >
-            <input
-              type="date"
-              name="publication_date"
-              class="input outline-none focus:outline-none my-3 mx-3"
-            />
+            <div>
+              <label class="text-xl" for="address">Address</label>
+              <input
+                type="text"
+                name="address"
+                class="input input-bordered w-full max-w-xs my-3 mx-3"
+                placeholder="Enter book address"
+              />
+            </div>
+            <div>
+              <label class="text-xl" for="genre">Genre</label>
+              <select
+                class="select select-bordered w-full max-w-xs"
+                name="genre"
+              >
+                <option selected>Fantasy</option>
+                <option>Drama</option>
+                <option>Comedy</option>
+                <option>Physics</option>
+                <option>Literature</option>
+              </select>
+            </div>
           </div>
         </form>
 
@@ -270,7 +376,60 @@
           });
       });
     </script>
-    <% } %> <% if (requestedAdmins.length > 0) { %>
+    <% } if(requestedIssues.length>0){%>
+    <script>
+      const issueCheckboxes = document.querySelectorAll(".issue-checkbox");
+      const selectedIssueReqIds = [];
+      const selectedIssuebooks = {};
+
+      issueCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", (event) => {
+          if (event.target.checked) {
+          
+            selectedIssueReqIds.push(event.target.dataset.issueId);
+            if (!selectedIssuebooks[event.target.dataset.bookId]) {
+              selectedIssuebooks[event.target.dataset.bookId] = 1;
+            } else {
+              selectedIssuebooks[event.target.dataset.bookId]++;
+            }
+          } else {
+            const index = selectedIssueReqIds.indexOf(
+              event.target.dataset.issueId
+            );
+            if (index > -1) {
+              selectedIssueReqIds.splice(index, 1);
+            }
+            selectedIssuebooks[event.target.dataset.bookId]--;
+          }
+        });
+      });
+      const submitIssueButton =
+        document.getElementsByClassName("approve-issue-btn");
+      submitIssueButton[0].addEventListener("click", (event) => {
+        event.preventDefault();
+        if (selectedIssueReqIds.length === 0) {
+          alert("Please select at least one checkbox");
+          return;
+        }
+
+        const requestBody = JSON.stringify({
+          issueIds: selectedIssueReqIds,
+          selectedIssuebooks,
+        });
+
+        fetch("/api/admin/approveissues/", {
+          method: "POST",
+          body: requestBody,
+          headers: { "Content-Type": "application/json" },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            selectedIssueReqIds.length = 0;
+            selectedIssuebooks = {};
+          });
+      });
+    </script>
+    <%}%> <% if (requestedAdmins.length > 0) { %>
     <script>
       const adminCheckboxes = document.querySelectorAll(".admin-checkbox");
       const selectedUserIds = [];

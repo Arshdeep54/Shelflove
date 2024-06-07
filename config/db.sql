@@ -4,15 +4,16 @@ CREATE TABLE user (
     email VARCHAR(255),
     password VARCHAR(255),
     isAdmin BOOLEAN DEFAULT FALSE,
-    adminRequest BOOLEAN  DEFAULT FALSE,
-)
+    adminRequest BOOLEAN DEFAULT FALSE
+);
 
 CREATE TABLE book (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255),
+    title VARCHAR(255),
     author VARCHAR(255),
     publication_date DATE,
     quantity INT,
+    genre VARCHAR(255),
     description VARCHAR(255),
     rating FLOAT,
     address VARCHAR(255)
@@ -23,9 +24,12 @@ CREATE TABLE issue(
     user_id INT NOT NULL, 
     bookid INT NOT NULL,
     issue_date DATE,
-    return_date DATE,
+    expected_return_date DATE,
+    returned_date DATE,
     isReturned BOOLEAN DEFAULT FALSE,
     returnRequested BOOLEAN DEFAULT FALSE,
+    issueRequested BOOLEAN DEFAULT FALSE,
+    fine FLOAT DEFAULT 0, 
     FOREIGN KEY (user_id) REFERENCES user(id), 
     FOREIGN KEY (bookid) REFERENCES book(id)
 );

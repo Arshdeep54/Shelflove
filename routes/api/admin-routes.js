@@ -1,4 +1,5 @@
 const db = require("../../config/dbconfig");
+const isBookIssued = require("../../middlewares/isBookIssued");
 const { ISSUE_DUARATION } = require("../../utils");
 const router = require("express").Router();
 const moment = require("moment");
@@ -24,7 +25,7 @@ router.post("/addbook", async (req, res) => {
     !address ||
     !genre
   ) {
-    return res.status(400).json({ message: "Missing required fields" });
+    return res.render("error",{ message: "Missing required fields" });
   }
 
   try {
@@ -121,9 +122,10 @@ router.post("/updatebook/:id", async (req, res) => {
   }
 });
 
-router.post("/deletebook/:bookId", async (req, res) => {
+router.post("/deletebook/:bookId",isBookIssued, async (req, res) => {
   const { bookId } = req.params;
   try {
+    
     const query = `UPDATE book SET quantity = -1 WHERE id= ? ;`;
     const values = [parseInt(bookId)];
     await db.query(query, values, (err, result) => {

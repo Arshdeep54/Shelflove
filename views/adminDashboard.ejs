@@ -300,9 +300,12 @@
               <input
                 type="number"
                 name="quantity"
+                min="0"
+                id="positiveQuantityInput"
                 class="input input-bordered w-full max-w-xs my-3 mx-3"
                 placeholder="Enter how many books to enter"
               />
+              <p class="text-red-500" id="errorQuant"></p>
             </div>
             <div>
               <label class="text-xl" for="rating">Rating</label>
@@ -525,6 +528,28 @@
       });
     </script>
     <script>
+      const numberInput = document.getElementById("positiveQuantityInput");
+      const errorQuant = document.getElementById("errorQuant");
+
+      numberInput.addEventListener("keypress", function (event) {
+        if (event.key === "Backspace" || event.key === "Delete") {
+          errorQuant.innerHTML = " ";
+          return;
+        }
+
+        const isNumber = !isNaN(event.key) && event.key !== ".";
+
+        if (!isNumber) {
+          event.preventDefault();
+          errorQuant.innerHTML = `Can't add negative or decimal number`;
+        } else if (
+          event.key === "Backspace" ||
+          event.key === "Delete" ||
+          isNumber
+        ) {
+          errorQuant.innerHTML = " ";
+        }
+      });
       const addBookButton = document.getElementById("addbook");
       const addnewbookForm = document.getElementById("addnewbookForm");
 

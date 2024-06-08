@@ -1,4 +1,3 @@
-const isLoggedIn = require("./isLoggedIn");
 
 function isAdminMiddleware(req, res, next) {
 

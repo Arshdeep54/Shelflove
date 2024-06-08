@@ -4,10 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shelflove</title>
-    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
-    <!-- <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script> -->
     <link type="text/css" href="/css/style.css" rel="stylesheet" />
-
     <link
       href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css"
       rel="stylesheet"
@@ -15,6 +12,7 @@
     />
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
+
   <body>
     <%- include('./components/navbar.ejs') %>
     <div class="mx-5 my-5">
@@ -22,7 +20,7 @@
       <h2 class="text text-lg text-primary mb-5">
         <%= user.name %> ( <%= user.email %> )
       </h2>
-      <% if (requestedReturns.length > 0) { %>
+      <% if (requestedReturns.length> 0) { %>
       <div class="flex flex-row justify-between">
         <h3 class="text text-slate-400 text-2xl">Requested returns</h3>
         <button class="btn btn-accent approve-btn">Approve Selected</button>
@@ -76,7 +74,7 @@
               </a>
             </td>
             <td>
-              <%= returnRequest.author %><%=returnRequest.returnRequested%>
+              <%= returnRequest.author %> <%=returnRequest.returnRequested%>
             </td>
             <td>
               <%= moment(returnRequest.issue_date).format('YYYY-MM-DD') %>
@@ -101,7 +99,7 @@
       </table>
       <% } else { %>
       <p>No new Requests</p>
-      <% } %> <% if (requestedIssues.length > 0) { %>
+      <% } %> <% if (requestedIssues.length> 0) { %>
       <div class="divider"></div>
       <div class="flex flex-row justify-between">
         <h3 class="text text-slate-400 text-2xl">Requested issues</h3>
@@ -113,10 +111,10 @@
         <thead>
           <tr class="text text-blue-500 text-lg">
             <th>Issue ID</th>
+            <th>Username</th>
             <th>Title</th>
             <th>Author</th>
-            <th>Issued Date</th>
-            <th>Return Date</th>
+            <th>Quantity</th>
             <th>Requested Issue</th>
             <th>Select to approve</th>
           </tr>
@@ -125,6 +123,7 @@
           <% for (const issueRequest of requestedIssues) { %>
           <tr>
             <td><%= issueRequest.issueId %></td>
+            <td><%= issueRequest.username %></td>
             <td class="flex flex-row gap-2">
               <%= issueRequest.bookTitle %>
               <a href="/books/<%= issueRequest.bookId %>">
@@ -158,11 +157,8 @@
               </a>
             </td>
             <td><%= issueRequest.author %></td>
-            <td><%= moment(issueRequest.issue_date).format('YYYY-MM-DD') %></td>
-            <td>
-              <%= moment(issueRequest.expected_return_date).format('YYYY-MM-DD')
-              %>
-            </td>
+            <td><%= issueRequest.quantity %></td>
+
             <td><%= issueRequest.issueRequested==0?"No":"Yes" %></td>
             <td>
               <input
@@ -171,17 +167,25 @@
                 id="checkbox<%=issueRequest.issueId%>"
                 data-issue-id="<%= issueRequest.issueId%>"
                 data-book-id="<%= issueRequest.bookId %>"
+                data-book-quantity="<%=issueRequest.quantity%>"
               />
             </td>
+            <td>
+              <form
+                action="/api/admin/denyIssue/<%=issueRequest.issueId%>"
+                method="post"
+              >
+                <button class="btn btn-secondary" type="submit">Deny</button>
+              </form>
+            </td>
           </tr>
-
           <% } %>
         </tbody>
       </table>
       <% }%>
       <br />
       <div class="divider"></div>
-      <% if (requestedAdmins.length > 0) { %>
+      <% if (requestedAdmins.length> 0) { %>
       <div>
         <div class="flex flex-row justify-between">
           <h3 class="text text-slate-400 text-2xl">
@@ -216,8 +220,15 @@
                   data-user-id="<%= adminRequest.userId %>"
                 />
               </td>
+              <td>
+                <form
+                  action="/api/admin/denyAdmin/<%=adminRequest.userId%>"
+                  method="post"
+                >
+                  <button class="btn btn-secondary" type="submit">Deny</button>
+                </form>
+              </td>
             </tr>
-
             <% } %>
           </tbody>
         </table>
@@ -338,16 +349,17 @@
         </div>
       </div>
     </dialog>
-    <% if (requestedReturns.length > 0) { %>
+    <% if (requestedReturns.length> 0) { %>
     <script>
       const returnCheckboxes = document.querySelectorAll(".return-checkbox");
       const selectedIssueIds = [];
-      const selectedReturnbooks = {};
+      let selectedReturnbooks = {};
 
       returnCheckboxes.forEach((checkbox) => {
         checkbox.addEventListener("change", (event) => {
           if (event.target.checked) {
             selectedIssueIds.push(event.target.dataset.issueId);
+
             if (!selectedReturnbooks[event.target.dataset.bookId]) {
               selectedReturnbooks[event.target.dataset.bookId] = 1;
             } else {
@@ -382,28 +394,40 @@
           method: "POST",
           body: requestBody,
           headers: { "Content-Type": "application/json" },
-        })
-        .then((response) => {
-            selectedIssueIds.length = 0;
-            selectedReturnbooks = {};
-            location.reload();
-          });
+        }).then((response) => {
+          selectedIssueIds.length = 0;
+          selectedReturnbooks = {};
+          location.reload();
+        });
       });
     </script>
     <% } if(requestedIssues.length>0){%>
     <script>
       const issueCheckboxes = document.querySelectorAll(".issue-checkbox");
       const selectedIssueReqIds = [];
-      const selectedIssuebooks = {};
+      let selectedIssuebooks = {};
 
       issueCheckboxes.forEach((checkbox) => {
         checkbox.addEventListener("change", (event) => {
           if (event.target.checked) {
-            selectedIssueReqIds.push(event.target.dataset.issueId);
-            if (!selectedIssuebooks[event.target.dataset.bookId]) {
+            let bookQuantity = event.target.dataset.bookQuantity;
+            console.log(bookQuantity);
+            if (
+              !selectedIssuebooks[event.target.dataset.bookId] &&
+              bookQuantity > 0
+            ) {
+              selectedIssueReqIds.push(event.target.dataset.issueId);
               selectedIssuebooks[event.target.dataset.bookId] = 1;
             } else {
-              selectedIssuebooks[event.target.dataset.bookId]++;
+              if (
+                bookQuantity > selectedIssuebooks[event.target.dataset.bookId]
+              ) {
+                selectedIssueReqIds.push(event.target.dataset.issueId);
+                selectedIssuebooks[event.target.dataset.bookId]++;
+              } else {
+                alert("Not enough books");
+                event.target.checked = false;
+              }
             }
           } else {
             const index = selectedIssueReqIds.indexOf(
@@ -414,6 +438,7 @@
             }
             selectedIssuebooks[event.target.dataset.bookId]--;
           }
+          console.log({ selectedIssuebooks, selectedIssueReqIds });
         });
       });
       const submitIssueButton =
@@ -434,15 +459,14 @@
           method: "POST",
           body: requestBody,
           headers: { "Content-Type": "application/json" },
-        })
-          .then((response) => {
-            selectedIssueReqIds.length = 0;
-            selectedIssuebooks = {};
-            location.reload();
-          });
+        }).then((response) => {
+          selectedIssueReqIds.length = 0;
+          selectedIssuebooks = {};
+          location.reload();
+        });
       });
     </script>
-    <%}%> <% if (requestedAdmins.length > 0) { %>
+    <%}%> <% if (requestedAdmins.length> 0) { %>
     <script>
       const adminCheckboxes = document.querySelectorAll(".admin-checkbox");
       const selectedUserIds = [];

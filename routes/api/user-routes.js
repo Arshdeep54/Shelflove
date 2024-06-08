@@ -4,6 +4,7 @@ const router = require("express").Router();
 
 const isLoggedIn = require("../../middlewares/isLoggedIn");
 const isBookAvailable = require("../../middlewares/isBookAvailable");
+const { ISSUE_DUARATION } = require("../../utils");
 
 router.post("/issue/:bookid", isBookAvailable, async (req, res) => {
   const { user_id, bookid } = req.body;
@@ -12,12 +13,6 @@ router.post("/issue/:bookid", isBookAvailable, async (req, res) => {
   }
 
   try {
-    // const isAvailable = await isBookAvailable(bookid);
-
-    // if (!isAvailable) {
-      // return res.status(400).json({ message: "Book is not available" });
-    // }
-
     await db.query(
       `SELECT * FROM issue WHERE user_id = ? AND isReturned = FALSE`,
       [user_id],
@@ -28,14 +23,12 @@ router.post("/issue/:bookid", isBookAvailable, async (req, res) => {
             .render("error", { message: "User has an outstanding loan" });
           return;
         }
-        const today = moment().format("YYYY-MM-DD");
-        const returnDate = moment(today).add(14, "days").format("YYYY-MM-DD");
 
         const query = `
-            INSERT INTO issue (user_id, bookid, issue_date, expected_return_date,issueRequested)
-            VALUES (?, ?, ?, ?,?)
+            INSERT INTO issue (user_id, bookid,issueRequested)
+            VALUES (?,?,?)
           `;
-        const values = [user_id, bookid, today, returnDate, true];
+        const values = [user_id, bookid, true];
 
         await db.query(query, values, (error, result) => {
           if (error) {

@@ -1,8 +1,7 @@
 const db = require("../../config/dbconfig");
-const isLoggedIn = require("../../middlewares/isLoggedIn");
-
+const { ISSUE_DUARATION } = require("../../utils");
 const router = require("express").Router();
-
+const moment = require("moment");
 router.post("/addbook", async (req, res) => {
   const {
     title,
@@ -121,6 +120,7 @@ router.post("/updatebook/:id", async (req, res) => {
     res.status(500).render("error", { message: "Error updating book" });
   }
 });
+
 router.post("/deletebook/:bookId", async (req, res) => {
   const { bookId } = req.params;
   try {
@@ -186,10 +186,15 @@ router.post("/approveissues/", async (req, res) => {
         }
       }
     );
-
+    console.log("gere", moment());
+    const today = moment().format("YYYY-MM-DD");
+    console.log(today);
+    const returnDate = moment(today)
+      .add(ISSUE_DUARATION, "days")
+      .format("YYYY-MM-DD");
     const query = `
       UPDATE issue
-      SET issueRequested = FALSE, isReturned = FALSE
+      SET issueRequested = FALSE, isReturned = FALSE ,issue_date='${today}' , expected_return_date='${returnDate}'
       WHERE id IN (?)
     `;
     await db.query(query, [issueIds], (err, result) => {
@@ -199,14 +204,31 @@ router.post("/approveissues/", async (req, res) => {
           .json({ message: "No issues found for approval" });
       }
     });
-    return res.redirect('/admin');
+    return res.json({ message: "suucessfully aproved" });
   } catch (error) {
     res
       .status(500)
       .render("error", { message: "Error approving Issue Requests" });
   }
 });
-
+router.post("/denyIssue/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = `DELETE FROM issue WHERE id= ?`;
+    const values = [parseInt(id)];
+    await db.query(query, values, (err, result) => {
+      if (err) throw err;
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Issue not found" });
+      }
+    });
+    return res.redirect("/admin");
+  } catch (error) {
+    res
+      .status(500)
+      .render("error", { message: "Error denying Issue Requests" });
+  }
+});
 router.post("/approve/", async (req, res) => {
   const { issueIds, selectedReturnbooks } = req.body;
   if (!issueIds || !Array.isArray(issueIds) || issueIds.length === 0) {
@@ -235,20 +257,24 @@ router.post("/approve/", async (req, res) => {
         }
       }
     );
+
+    const returned_date = moment().format("YYYY-MM-DD");
     const query = `
       UPDATE issue
-      SET returnRequested = FALSE, isReturned = TRUE
+      SET returnRequested = FALSE, isReturned = TRUE ,returned_date ='${returned_date}'
       WHERE id IN (?)
     `;
     await db.query(query, [issueIds], (err, result) => {
-
+      if (!result) {
+        return res.status(404).json({ message: "Something Went wrong" });
+      }
       if (result.affectedRows === 0) {
         return res
           .status(404)
           .json({ message: "No issues found for approval" });
       }
-      return res.redirect("/admin");
     });
+    return res.json({ message: "suucessfully aproved" });
   } catch (error) {
     res.status(500).render("error", { message: "Error approving returns" });
   }
@@ -281,6 +307,27 @@ router.post("/approveadmin/", async (req, res) => {
     res.render("adminDashboard");
   } catch (error) {
     res.status(500).render("error", { message: "Error approving returns" });
+  }
+});
+
+router.post("/denyAdmin/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = `UPDATE user SET adminRequest= false WHERE id= ?`;
+    const values = [parseInt(id)];
+    await db.query(query, values, (err, result) => {
+      if (!result || err) {
+        throw err;
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Issue not found" });
+      }
+    });
+    return res.redirect("/admin");
+  } catch (error) {
+    res
+      .status(500)
+      .render("error", { message: "Error denying Issue Requests" });
   }
 });
 router.post("/remind/:userid", (req, res) => {});

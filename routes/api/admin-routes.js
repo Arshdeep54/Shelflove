@@ -124,7 +124,7 @@ router.post("/updatebook/:id", async (req, res) => {
 router.post("/deletebook/:bookId", async (req, res) => {
   const { bookId } = req.params;
   try {
-    const query = `UPDATE book SET quantity = 0 WHERE id= ? ;`;
+    const query = `UPDATE book SET quantity = -1 WHERE id= ? ;`;
     const values = [parseInt(bookId)];
     await db.query(query, values, (err, result) => {
       if (err) {

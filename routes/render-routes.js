@@ -22,7 +22,7 @@ route.get("/books", isLoggedIn, async (req, res) => {
   const isLoggedIn = req.isLoggedIn;
 
   try {
-    const query = `SELECT * FROM book ORDER BY quantity DESC;`;
+    const query = `SELECT * FROM book WHERE quantity >=0 ORDER BY quantity DESC;`;
     await db.query(query, (error, result) => {
       res.render("bookspage", {
         isLoggedIn,

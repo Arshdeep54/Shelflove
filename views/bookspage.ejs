@@ -67,7 +67,14 @@
             </td>
             <td><%= book.author %></td>
             <td><%= book.rating %></td>
-            <td><%= book.quantity %></td>
+
+            <% if(book.quantity===0){ %>
+            <td>Not Available</td>
+            <% }else if(book.quantity===-1) {%>
+            <td>Deleted</td>
+            <%} else{%>
+            <td><%= book.quantity%></td>
+            <%}%>
             <td><%= book.genre %></td>
           </tr>
           <% } %>

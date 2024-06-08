@@ -27,7 +27,13 @@
           moment(book.publication_date).format("MMM Do YYYY") %>
         </p>
         <p><span class="text-primary">Rating: </span><%= book.rating %></p>
-        <p><span class="text-primary">Quantity:</span> <%= book.quantity %></p>
+        <p>
+          <span class="text-primary">Quantity:</span> <% if(book.quantity===0){
+          %> <span class="text-accent">Not Available</span> <% }else
+          if(book.quantity===-1) {%>
+          <span class="text-red-500">DELETED</span><%} else{%> <%=
+          book.quantity%> <%}%>
+        </p>
         <p><span class="text-primary">Genre:</span> <%= book.genre %></p>
         <p><span class="text-primary">Address:</span> <%= book.address %></p>
       </div>
@@ -70,7 +76,11 @@
           <%} }%>
         </form>
         <% } else { %>
-        <form action="/api/user/issue/<%=book.id %>" method="post" id="issueForm">
+        <form
+          action="/api/user/issue/<%=book.id %>"
+          method="post"
+          id="issueForm"
+        >
           <input
             type="hidden"
             id="bookid"
@@ -90,7 +100,7 @@
         <% }%>
       </div>
     </section>
-    <% if(user.isAdmin) {%>
+    <% if(user.isAdmin && book.quantity >=0) {%>
     <div class="flex flex-row gap-5 m-5">
       <button
         class="btn btn-primary"
@@ -98,6 +108,13 @@
         onclick="DeleteModal.showModal()"
       >
         Delete book
+      </button>
+      <button
+        class="btn btn-primary"
+        type="submit"
+        onclick="UpdateModal.showModal()"
+      >
+        Update book
       </button>
       <dialog id="DeleteModal" class="modal">
         <form
@@ -118,13 +135,7 @@
           </form>
         </div>
       </dialog>
-      <button
-        class="btn btn-primary"
-        type="submit"
-        onclick="UpdateModal.showModal()"
-      >
-        Update book
-      </button>
+
       <dialog id="UpdateModal" class="modal">
         <div class="modal-box w-11/12 max-w-5xl">
           <form method="dialog">

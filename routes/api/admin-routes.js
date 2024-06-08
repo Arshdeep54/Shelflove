@@ -186,9 +186,7 @@ router.post("/approveissues/", async (req, res) => {
         }
       }
     );
-    console.log("gere", moment());
     const today = moment().format("YYYY-MM-DD");
-    console.log(today);
     const returnDate = moment(today)
       .add(ISSUE_DUARATION, "days")
       .format("YYYY-MM-DD");

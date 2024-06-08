@@ -411,7 +411,6 @@
         checkbox.addEventListener("change", (event) => {
           if (event.target.checked) {
             let bookQuantity = event.target.dataset.bookQuantity;
-            console.log(bookQuantity);
             if (
               !selectedIssuebooks[event.target.dataset.bookId] &&
               bookQuantity > 0
@@ -438,7 +437,6 @@
             }
             selectedIssuebooks[event.target.dataset.bookId]--;
           }
-          console.log({ selectedIssuebooks, selectedIssueReqIds });
         });
       });
       const submitIssueButton =

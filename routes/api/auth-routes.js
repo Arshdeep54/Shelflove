@@ -4,13 +4,11 @@ const bcrypt = require("bcrypt");
 
 const jwt = require("jsonwebtoken");
 router.post("/signup", async (req, res) => {
-  const isLoggedIn = req.isLoggedIn;
   const { username, email, password, password2 } = req.body;
 
   if (!username || !email || !password || !password2) {
     return res.status(400).render("signup", {
       isLoggedIn: false,
-
       errorMessage: "Missing required fields",
     });
   }
@@ -29,15 +27,26 @@ router.post("/signup", async (req, res) => {
     const query = `INSERT INTO user (username, email, password) VALUES (?, ?, ?)`;
     const values = [username, email, hashedPassword];
 
-    db.query(query, values, (error, result) => {
+    await db.query(query, values, async (error, result) => {
       if (error) {
         return res.render("signup", {
           isLoggedIn: false,
-          errorMessage: "Username already exist",
+          errorMessage: "Username or Email already exist",
         });
       }
 
       const userID = result.insertID;
+      await db.query(
+        `UPDATE user SET isAdmin=true WHERE id=1`,
+        (err, values) => {
+          if (err || !values) {
+            return res.render("error", {
+              message: "Error making the first user admin ",
+            });
+          }
+        }
+      );
+
       const token = jwt.sign(
         { id: userID, isAdmin: false },
         process.env.JWT_SECRET,
